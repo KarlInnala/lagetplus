@@ -41,3 +41,34 @@
     display: flex;
     flex-direction: column;
 }
+
+#personimage {
+    width: 10%;
+    
+}
+
+#personimage > img {
+    width: 100%;
+}
+
+.personbox {
+    display: flex;
+    background-color: bisque;
+    height: min-content;
+    
+}
+
+#personinfo{
+    display: flex;
+    flex-direction: column;
+}
+
+#name {
+    font-weight: bolder;
+    font-size: 40px;
+}
+
+#title {
+    font-style: italic;
+    font-size: 20px;
+}

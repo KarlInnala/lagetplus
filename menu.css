@@ -1,0 +1,26 @@
+
+.menu {
+    background-color: rgb(134, 38, 38);
+}
+.menu > ul{
+    display: flex;
+    gap: 10px;
+    list-style: none;
+}
+
+.menu > ul > li > a > div {
+    display: flex;
+    background-color: rgb(28, 51, 151);
+    width: 100px;
+    height: 50px;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+.menu > ul > li > a {
+    text-decoration: none;
+    color: white;
+
+}
+
