@@ -1,0 +1,43 @@
+#paywall {
+    display: flex;
+    justify-self: center;
+    margin-top: 200px;
+    
+    outline-style: outset;
+    outline-width: 2px;
+    padding: 10px;
+}
+
+#paywallimage {
+    
+    width: 300px;
+}
+
+#paywallimage > div {
+    display: flex;
+    flex-direction: column;
+    background-color: aqua;
+    justify-self: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: bold;
+    font-size: 30px;
+    font-family: calibri;
+}
+
+#paywallenterinfo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+}
+
+#user {
+    display: flex;
+    flex-direction: column;
+}
+
+#password {
+    display: flex;
+    flex-direction: column;
+}
