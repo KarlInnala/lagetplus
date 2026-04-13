@@ -47,14 +47,22 @@
     
 }
 
+#personimage {
+    width: min-content;
+    height: 100%;
+}
+
 #personimage > img {
-    width: 100%;
+    height: 100%;
 }
 
 .personbox {
     display: flex;
+    width: 50%;
+    height: 200px;
+    
     background-color: bisque;
-    height: min-content;
+    
     
 }
 

@@ -6,12 +6,19 @@
     display: flex;
     gap: 10px;
     list-style: none;
+    margin-right: 20%;
+    margin-left: 20%;
+}
+
+.menu > ul > li {
+    flex: 1;
+    transition: flex 200ms;
 }
 
 .menu > ul > li > a > div {
     display: flex;
     background-color: rgb(28, 51, 151);
-    width: 100px;
+    
     height: 50px;
     justify-content: center;
     align-items: center;
@@ -24,3 +31,6 @@
 
 }
 
+.menu > ul > li:hover{
+    flex: 2;
+}
