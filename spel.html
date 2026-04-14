@@ -17,89 +17,45 @@
     </nav> 
     Här kan du spela skojiga spel med dina kompisar
 </body>
-    <!DOCTYPE html>
-<html lang="sv">
-<head>
-    <meta charset="UTF-8">
-    <title>LagetPay - Strategisk Investering</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f2f5; }
-        .board { 
-            display: grid; 
-            grid-template-columns: repeat(3, 100px); 
-            grid-gap: 5px; 
-            justify-content: center; 
-            margin-top: 20px;
-        }
-        .cell { 
-            width: 100px; height: 100px; 
-            background: white; border: 2px solid #0070ba; 
-            font-size: 2em; display: flex; align-items: center; 
-            justify-content: center; cursor: pointer; 
-        }
-        .cell:hover { background: #e6f0ff; }
-        #status { margin-top: 20px; font-weight: bold; color: #003087; }
-        button { margin-top: 20px; padding: 10px 20px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <h1>Laget Luffarschack</h1>
-    <p>Besegra systemet för att slippa donationer (omöjligt).</p>
+    <div style="margin: 30px auto; max-width: 600px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 1px solid #cce0ff;">
+    <h3 style="color: #003087; text-align: center; margin-top: 0;">Välj din vinststrategi</h3>
     
-    <div id="status">X:s tur att investera</div>
-    <div class="board" id="board">
-        <div class="cell" onclick="makeMove(this, 0)"></div>
-        <div class="cell" onclick="makeMove(this, 1)"></div>
-        <div class="cell" onclick="makeMove(this, 2)"></div>
-        <div class="cell" onclick="makeMove(this, 3)"></div>
-        <div class="cell" onclick="makeMove(this, 4)"></div>
-        <div class="cell" onclick="makeMove(this, 5)"></div>
-        <div class="cell" onclick="makeMove(this, 6)"></div>
-        <div class="cell" onclick="makeMove(this, 7)"></div>
-        <div class="cell" onclick="makeMove(this, 8)"></div>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+        <thead>
+            <tr style="border-bottom: 2px solid #0070ba; color: #0070ba;">
+                <th style="padding: 12px; text-align: left;">Projekt</th>
+                <th style="padding: 12px; text-align: left;">Risk/Reward</th>
+                <th style="padding: 12px; text-align: center;">Åtgärd</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 15px;">
+                    <strong style="display: block;">Whack-a-Mas</strong>
+                    <span style="font-size: 0.8em; color: #666;">Snabb likviditetshantering</span>
+                </td>
+                <td style="padding: 15px; color: #28a745;">Hög ROI</td>
+                <td style="padding: 15px; text-align: center;">
+                    <a href="whack-a-mas.html" style="background: #0070ba; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 0.9em; font-weight: bold;">STARTA</a>
+                </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 15px;">
+                    <strong style="display: block;">Laget-Luffarschack</strong>
+                    <span style="font-size: 0.8em; color: #666;">Strategisk tillväxtanalys</span>
+                </td>
+                <td style="padding: 15px; color: #fd7e14;">Medelrisk</td>
+                <td style="padding: 15px; text-align: center;">
+                    <a href="luffarschack.html" style="background: #0070ba; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 0.9em; font-weight: bold;">STARTA</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
     
-    <button onclick="resetGame()">Starta om för 50:-</button>
-
-    <script>
-        let currentPlayer = "X";
-        let gameState = ["", "", "", "", "", "", "", "", ""];
-        const statusDisplay = document.getElementById('status');
-
-        function makeMove(cell, index) {
-            if (gameState[index] !== "" || checkWinner()) return;
-
-            gameState[index] = currentPlayer;
-            cell.innerText = currentPlayer;
-            
-            if (checkWinner()) {
-                statusDisplay.innerText = "Spelare " + currentPlayer + " vann! Örtugen gratulerar.";
-            } else if (!gameState.includes("")) {
-                statusDisplay.innerText = "Oavgjort! Båda donerar 50:-";
-            } else {
-                currentPlayer = currentPlayer === "X" ? "O" : "X";
-                statusDisplay.innerText = currentPlayer + ":s tur";
-            }
-        }
-
-        function checkWinner() {
-            const winConditions = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rader
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Kolumner
-                [0, 4, 8], [2, 4, 6]             // Diagonaler
-            ];
-            return winConditions.some(condition => {
-                return condition.every(index => gameState[index] === currentPlayer);
-            });
-        }
-
-        function resetGame() {
-            currentPlayer = "X";
-            gameState = ["", "", "", "", "", "", "", "", ""];
-            statusDisplay.innerText = "X:s tur";
-            document.querySelectorAll('.cell').forEach(cell => cell.innerText = "");
-        }
-    </script>
+    <p style="font-size: 0.7em; color: #999; margin-top: 15px; text-align: center;">
+        *Historisk avkastning är ingen garanti för framtida donationer. VOILA™ tar inget ansvar för förlorad speltid eller spillt kaffe.
+    </p>
+</div>
 </body>
     
 </body>
