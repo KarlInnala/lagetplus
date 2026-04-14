@@ -6,27 +6,44 @@
     <link rel="stylesheet" href="style.css">
 </head> 
 
-<body>
+<body style="margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; font-family: sans-serif;">
+
     <div id="paywall">
         <div id="paywallimage">
-            <div><label>För att få tillgång måste du ha LAGET+</label></div>
-			<br /><br /> <br /><br />
-            <div>
-                <img src="tf.png" alt="Logotyp">
+            <div><label style="font-weight: bold; font-size: 1.2em;">För att få tillgång måste du ha LAGET+</label></div>
+            
+            <div style="margin: 40px 0;">
+                <img src="tf.png" alt="Logotyp" style="width: 150px; animation: spin 2s linear infinite;">
             </div>
-			<br /><br /> <br /><br />
+            
             <div><label>kostar enbart 100:- </label> </div> 
         </div>
-        
-
     </div>
-	<div><img src="blinkandepil.gif" justify-content: center;> "</div>
-	    <img src="LagetPay.png" alt="Logotyp" width="300" height="200" justify-content: center;> 
-	<br /><br />
-            <div id="user"><label>Användarnamn</label> <input type="text"></div>
-            <div id="password"><label>Lösenord</label> <input type="password"></div>
-            <div><a href="loggedin.html">Logga in</a></div>
-        <br /><br /> <br /><br />
+
+    <div style="margin: 20px 0;">
+        <img src="blinkandepil.gif" alt="Pil" style="display: block; margin: 0 auto;">
+    </div>
+
+    <div>
+        <img src="LagetPay.png" alt="LagetPay Logotyp" width="300" height="200" style="display: block; margin: 0 auto;"> 
+    </div>
+
+    <br>
+
+    <div id="paywallenterinfo">
+        <div id="user" style="margin-bottom: 10px;">
+            <label>Användarnamn</label> <input type="text">
+        </div>
+        <div id="password" style="margin-bottom: 15px;">
+            <label>Lösenord</label> <input type="password">
+        </div>
+        <div>
+            <a href="loggedin.html" style="color: #0000EE; text-decoration: underline; font-weight: bold;">Logga in</a>
+        </div>
+    </div>
+
+    <br><br>
+
 </body>
 </html>
 
