@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgradera</title>
+    <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+    <nav class="menu">
+        <ul>
+            <li><a href="homepage.html"><div>Hem</div></a></li>
+            <li><a href="spel.html"><div>Spel</div></a></li>
+            <li><a href="upgrade.html"><div>Upgradera</div></a></li>
+            <li><a href="omvoila.html"><div>VOILA</div></a></li>
+        </ul>
+    </nav>    
+
+<title>Whack-a-Mas | LagetPay™</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f0f2f5; /* Klassisk tech-grå */
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 { color: #003087; margin-bottom: 5px; }
+        .subtitle { color: #666; font-style: italic; margin-top: 0; margin-bottom: 20px; }
+
+        .game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #0070ba; /* LagetPay-blå */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        .stat-box {
+            background: #e6f0ff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid #cce0ff;
+        }
+
+        /* Spelplanen - 3x3 rutnät */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-template-rows: repeat(3, 120px);
+            grid-gap: 15px;
+            justify-content: center;
+        }
+
+        .hole {
+            background-color: #b3d9ff; /* "Hålet" där myntet dyker upp */
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden; /* Döljer myntet när det är "nere" */
+            cursor: pointer;
+            border: 2px solid #80bdff;
+            transition: background-color 0.2s;
+        }
+        .hole:hover { background-color: #cce0ff; }
+
+        /* Själva örtugen/myntet */
+        .coin {
+            width: 100%;
+            height: 100%;
+            background-image: url('masen-removebg-preview.png'); /* <-- ANVÄND DIN LOGGA HÄR */
+            background-size: cover;
+            position: absolute;
+            bottom: -100%; /* Startar gömd under hålet */
+            transition: bottom 0.1s ease-out; /* Hastigheten myntet dyker upp */
+            border-radius: 50%;
+        }
+
+        /* Klassen som JavaScript lägger till för att visa myntet */
+        .hole.up .coin {
+            bottom: 0; /* Flyttar upp myntet */
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 15px 35px;
+            font-size: 1.2em;
+            background-color: #0070ba;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            font-weight: bold;
+        }
+        button:hover { background-color: #00568c; }
+        button:active { transform: scale(0.97); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Whack-a-Mas™</h1>
+        <p class="subtitle">Ge donationer genom klicka på Masen!</p>
+
+        <div class="stats">
+            <div class="stat-box">Donationer: <span id="score">0:-</span></div>
+            <div class="stat-box">Tid kvar: <span id="time">15</span>s</div>
+        </div>
+
+        <div class="grid">
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+            <div class="hole"><div class="coin"></div></div>
+        </div>
+
+        <button id="start-btn" onclick="startGame()">Starta Investeringsrunda</button>
+    </div>
+
+    <script>
+        const holes = document.querySelectorAll('.hole');
+        const scoreBoard = document.getElementById('score');
+        const timeDisplay = document.getElementById('time');
+        const startBtn = document.getElementById('start-btn');
+        let lastHole;
+        let timeUp = false;
+        let score = 0;
+        let countdown;
+        let timeLeft = 15; // Tid i sekunder per runda
+
+        // 1. Funktion för att få en slumpmässig tid som myntet är uppe (i millisekunder)
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
+
+        // 2. Funktion för att välja ett slumpmässigt hål
+        function randomHole(holesList) {
+            const index = Math.floor(Math.random() * holesList.length);
+            const hole = holesList[index];
+
+            // Förhindra att samma hål väljs två gånger i rad
+            if (hole === lastHole) {
+                return randomHole(holesList);
+            }
+            lastHole = hole;
+            return hole;
+        }
+
+        // 3. Huvudfunktionen som får myntet att dyka upp
+        function peep() {
+            const time = randomTime(400, 1000); // Myntet är uppe mellan 0.4 och 1 sekund
+            const hole = randomHole(holes);
+            hole.classList.add('up'); // Visar myntet (CSS)
+
+            // Ställ in en timer för att ta ner myntet
+            setTimeout(() => {
+                hole.classList.remove('up'); // Tar ner myntet (CSS)
+                if (!timeUp) peep(); // Om tiden inte är ute, visa ett nytt
+            }, time);
+        }
+
+        // 4. Starta spelet
+        function startGame() {
+            // Återställ allt
+            score = 0;
+            scoreBoard.innerText = "0:-";
+            timeUp = false;
+            timeLeft = 15;
+            timeDisplay.innerText = timeLeft;
+            startBtn.disabled = true; // Avaktivera startknappen
+            startBtn.innerText = "Investerar...";
+
+            // Starta nedräkningen
+            countdown = setInterval(() => {
+                timeLeft--;
+                timeDisplay.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    timeUp = true;
+                    startBtn.disabled = false;
+                    startBtn.innerText = "Starta Om (50:-)";
+                    
+                    // En liten parodi-finish!
+                    setTimeout(() => {
+                        alert("Rundan klar! Du lyckades donera " + score + ":- till Örtugens nya padel-hall. Bra jobbat!");
+                    }, 10);
+                }
+            }, 1000);
+
+            peep(); // Börja visa mynt
+        }
+
+        // 5. Hantera klick på myntet
+        function whack(e) {
+            // Säkerställ att klicket är äkta (inte simulerat)
+            if(!e.isTrusted) return; 
+
+            // 'this' refererar till hålet som klickades
+            if (!this.classList.contains('up')) return; // Klicka inte på tomma hål
+
+            score += 10; // Ge 10:- per klick
+            this.classList.remove('up'); // Ta ner myntet direkt vid klick
+            scoreBoard.innerText = score + ":-";
+        }
+
+        // Lägg till klick-event på alla hål
+        holes.forEach(hole => hole.addEventListener('click', whack));
+
+    </script>
+
+</body>
+</html>
