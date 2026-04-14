@@ -185,6 +185,9 @@
         function gameLoop() {
             if (!gameActive) return;
 
+            let speedMultiplier = bgMusic.playbackRate;
+            log.y += 3 * speedMultiplier;
+            
             // 1. Flytta stockar
             logs.forEach(log => {
                 log.y += 3; // Hastighet nedåt
