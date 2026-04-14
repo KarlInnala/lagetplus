@@ -138,95 +138,88 @@
     </div>
 
     <script>
-        const holes = document.querySelectorAll('.hole');
-        const scoreBoard = document.getElementById('score');
-        const timeDisplay = document.getElementById('time');
-        const startBtn = document.getElementById('start-btn');
-        let lastHole;
-        let timeUp = false;
-        let score = 0;
-        let countdown;
-        let timeLeft = 15; // Tid i sekunder per runda
+    const holes = document.querySelectorAll('.hole');
+    const scoreBoard = document.getElementById('score');
+    const timeDisplay = document.getElementById('time');
+    const startBtn = document.getElementById('start-btn');
+    
+    // --- NYTT: Skapa ljudobjektet ---
+    const masenSound = new Audio('masen.mp3'); 
+    // -------------------------------
 
-        // 1. Funktion för att få en slumpmässig tid som myntet är uppe (i millisekunder)
-        function randomTime(min, max) {
-            return Math.round(Math.random() * (max - min) + min);
+    let lastHole;
+    let timeUp = false;
+    let score = 0;
+    let countdown;
+    let timeLeft = 15;
+
+    function randomTime(min, max) {
+        return Math.round(Math.random() * (max - min) + min);
+    }
+
+    function randomHole(holesList) {
+        const index = Math.floor(Math.random() * holesList.length);
+        const hole = holesList[index];
+        if (hole === lastHole) {
+            return randomHole(holesList);
         }
+        lastHole = hole;
+        return hole;
+    }
 
-        // 2. Funktion för att välja ett slumpmässigt hål
-        function randomHole(holesList) {
-            const index = Math.floor(Math.random() * holesList.length);
-            const hole = holesList[index];
+    function peep() {
+        const time = randomTime(400, 1000);
+        const hole = randomHole(holes);
+        hole.classList.add('up');
+        setTimeout(() => {
+            hole.classList.remove('up');
+            if (!timeUp) peep();
+        }, time);
+    }
 
-            // Förhindra att samma hål väljs två gånger i rad
-            if (hole === lastHole) {
-                return randomHole(holesList);
-            }
-            lastHole = hole;
-            return hole;
-        }
+    function startGame() {
+        score = 0;
+        scoreBoard.innerText = "0:-";
+        timeUp = false;
+        timeLeft = 15;
+        timeDisplay.innerText = timeLeft;
+        startBtn.disabled = true;
+        startBtn.innerText = "Investerar...";
 
-        // 3. Huvudfunktionen som får myntet att dyka upp
-        function peep() {
-            const time = randomTime(400, 1000); // Myntet är uppe mellan 0.4 och 1 sekund
-            const hole = randomHole(holes);
-            hole.classList.add('up'); // Visar myntet (CSS)
-
-            // Ställ in en timer för att ta ner myntet
-            setTimeout(() => {
-                hole.classList.remove('up'); // Tar ner myntet (CSS)
-                if (!timeUp) peep(); // Om tiden inte är ute, visa ett nytt
-            }, time);
-        }
-
-        // 4. Starta spelet
-        function startGame() {
-            // Återställ allt
-            score = 0;
-            scoreBoard.innerText = "0:-";
-            timeUp = false;
-            timeLeft = 15;
+        countdown = setInterval(() => {
+            timeLeft--;
             timeDisplay.innerText = timeLeft;
-            startBtn.disabled = true; // Avaktivera startknappen
-            startBtn.innerText = "Investerar...";
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                timeUp = true;
+                startBtn.disabled = false;
+                startBtn.innerText = "Starta Om (50:-)";
+                
+                setTimeout(() => {
+                    alert("Rundan klar! Du lyckades donera " + score + ":- till Örtugens nya padel-hall. Bra jobbat!");
+                }, 10);
+            }
+        }, 1000);
 
-            // Starta nedräkningen
-            countdown = setInterval(() => {
-                timeLeft--;
-                timeDisplay.innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    timeUp = true;
-                    startBtn.disabled = false;
-                    startBtn.innerText = "Starta Om (50:-)";
-                    
-                    // En liten parodi-finish!
-                    setTimeout(() => {
-                        alert("Rundan klar! Du lyckades donera " + score + ":- till Örtugens nya padel-hall. Bra jobbat!");
-                    }, 10);
-                }
-            }, 1000);
+        peep();
+    }
 
-            peep(); // Börja visa mynt
-        }
+    function whack(e) {
+        if(!e.isTrusted) return; 
+        if (!this.classList.contains('up')) return;
 
-        // 5. Hantera klick på myntet
-        function whack(e) {
-            // Säkerställ att klicket är äkta (inte simulerat)
-            if(!e.isTrusted) return; 
+        // --- NYTT: Spela ljudet vid träff ---
+        masenSound.currentTime = 0; // Återställer ljudet till början (så man kan klicka snabbt)
+        masenSound.play();
+        // ------------------------------------
 
-            // 'this' refererar till hålet som klickades
-            if (!this.classList.contains('up')) return; // Klicka inte på tomma hål
+        score += 10;
+        this.classList.remove('up');
+        scoreBoard.innerText = score + ":-";
+    }
 
-            score += 10; // Ge 10:- per klick
-            this.classList.remove('up'); // Ta ner myntet direkt vid klick
-            scoreBoard.innerText = score + ":-";
-        }
-
-        // Lägg till klick-event på alla hål
-        holes.forEach(hole => hole.addEventListener('click', whack));
-
-    </script>
+    holes.forEach(hole => hole.addEventListener('click', whack));
+</script>
 
 </body>
 </html>
