@@ -88,6 +88,9 @@
         <div class="stats">
             <div class="stat-box">Marknadsvärde: <span id="score">0:-</span></div>
             <div class="stat-box">Status: <span id="rank">Praktikant</span></div>
+            <button id="reset-btn" onclick="manualReset()" style="margin-top: 20px; background-color: #e74c3c;">
+    Starta om
+    </button>
         </div>
 
         <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
@@ -265,7 +268,24 @@
             beaverDiv.style.left = beaver.x + "px";
             beaverDiv.style.top = beaver.y + "px";
         }
+        function manualReset() {
+    // 1. Stoppa och nollställ musiken helt
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+    bgMusic.playbackRate = 1.0; 
 
+    // 2. Stoppa genereringen av nya objekt tillfälligt
+    clearInterval(objectsInterval);
+
+    // 3. Rensa alla nuvarande objekt på skärmen
+    logs.forEach(log => log.element.remove());
+    obstacles.forEach(ob => ob.element.remove());
+    logs = [];
+    obstacles = [];
+
+    // 4. Kör den vanliga init-funktionen för att starta om allt
+    init();
+}
         init();
     </script>
 </body>
