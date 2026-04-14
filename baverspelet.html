@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bäver-Masen: Log-istic Disruption™</title>
+    <title>Bäverspelet™. Bli en äkta stocks-magnat!</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -40,7 +40,7 @@
         }
 
         #beaver {
-            width: 50px; height: 50px;
+            width: 100px; height: 100px;
             background-image: url('beaver-removebg-preview.png');
             z-index: 10;
         }
@@ -51,7 +51,7 @@
         }
 
         .obstacle {
-            width: 60px; height: 60px;
+            width: px; height: 100px;
             background-image: url('skvader-removebg-preview.png');
         }
 
@@ -89,7 +89,7 @@
 
     <div class="game-container">
         <h1>Log-istic Disruption™</h1>
-        <p class="subtitle">Disrupta marknaden med Bäver-Masen (Version 1.0-örtug)</p>
+        <p class="subtitle">Samla stocks med bävern! (Version 1.0-örtug)</p>
         
         <div id="game-area">
             <div id="beaver"></div>
@@ -101,7 +101,7 @@
         </div>
 
         <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-            Styr med piltangenterna. Undvik skvadrarna – de gillar inte tillväxt!
+            Styr med piltangenterna. Undvik skvadrarna – de gillar inte tillväxter!
         </p>
     </div>
 
@@ -136,7 +136,7 @@
             gameActive = true;
             score = 0;
             scoreBoard.innerText = "0:-";
-            rankDisplay.innerText = "Praktikant";
+            rankDisplay.innerText = "Färsking";
             beaver.x = AREA_WIDTH / 2 - 25;
             beaver.y = AREA_HEIGHT - 60;
             updateBeaverPosition();
@@ -238,7 +238,7 @@
             // 2. Kolla hinder (Game Over)
             obstacles.forEach(ob => {
                 if (isColliding(beaver, ob)) {
-                    gameOver("OBS! Krock med skvader. Administrationsavgift: 100% av dina örtugar.");
+                    gameOver("OBS! Krock med skvader. Administrationsavgift: 100% av ditt stocksvärde.");
                 }
             });
         }
@@ -252,15 +252,17 @@
         }
 
         function updateRank() {
-            if (score >= 500) rankDisplay.innerText = "Junior Log-istic Analyst";
-            if (score >= 1000) rankDisplay.innerText = "Senior Value Creator";
-            if (score >= 2000) rankDisplay.innerText = "Mythical Overlord of Disruption";
-        }
+    if (score >= 200) rankDisplay.innerText = "Nybörjar-gnagare";
+    if (score >= 500) rankDisplay.innerText = "Certifierad stocks-arkitekt";
+    if (score >= 1000) rankDisplay.innerText = "Senior stocks-disruptör";
+    if (score >= 2000) rankDisplay.innerText = "Mythical Overlord of the stocks";
+    if (score >= 5000) rankDisplay.innerText = "Örtugens Personliga stocks-konsult";
+}
 
         function gameOver(msg) {
             gameActive = false;
             clearInterval(objectsInterval);
-            alert("MARKNAVÄRDET KOLLAPSADE!\n\n" + msg + "\n\nDin slutliga donation: " + score + ":-");
+            alert("MARKNAVÄRDET PÅ DINA STOCKS KOLLAPSADE!\n\n" + msg + "\n\nDin slutliga donation: " + score + ":-");
             // Starta om
             init();
         }
