@@ -33,12 +33,11 @@
 
         #beaver, .log, .obstacle {
             position: absolute;
-            background-size: contain; /* Ändrat till contain för att se hela bilden i hitboxen */
+            background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
         }
 
-        /* --- SYNKRONISERADE STORLEKAR --- */
         #beaver {
             width: 80px; height: 80px;
             background-image: url('beaver-removebg-preview.png');
@@ -118,13 +117,11 @@
         const beaverDiv = document.getElementById("beaver");
         const scoreBoard = document.getElementById("score");
         const rankDisplay = document.getElementById("rank");
-        const masenSound = new Audio('masen.mp3');
 
         const AREA_WIDTH = 480;
         const AREA_HEIGHT = 600;
         const GRID_SIZE = 40;
 
-        // --- JS-VÄRDEN MATCHAR CSS-VÄRDEN ---
         let beaver = { x: AREA_WIDTH / 2 - 40, y: AREA_HEIGHT - 90, width: 80, height: 80 };
         let score = 0;
         let gameActive = false;
@@ -159,29 +156,34 @@
         function gameLoop() {
             if (!gameActive) return;
 
+            // VIKTIGT: Hämta multipliern i realtid varje frame
             let speedMultiplier = bgMusic.playbackRate || 1;
 
+            // 1. Flytta stockar och uppdatera deras logiska position (y)
             logs.forEach(log => {
                 log.y += 3 * speedMultiplier; 
                 log.element.style.top = log.y + "px";
             });
 
+            // 2. Flytta skvadrar och uppdatera deras logiska position (y)
             obstacles.forEach(ob => {
                 ob.y += 4 * speedMultiplier; 
-                ob.element.style.top = ob.y + "px";
+                // Hitboxen är centrerad (y+20), så vi ritar bilden 20px ovanför hitboxen
+                ob.element.style.top = (ob.y - 0) + "px"; 
             });
 
             checkCollisions();
 
+            // 4. Städa upp objekt som lämnat skärmen
             logs = logs.filter(log => {
-                if (log.y > AREA_HEIGHT) {
+                if (log.y > AREA_HEIGHT + 100) {
                     log.element.remove();
                     return false;
                 }
                 return true;
             });
             obstacles = obstacles.filter(ob => {
-                if (ob.y > AREA_HEIGHT) {
+                if (ob.y > AREA_HEIGHT + 100) {
                     ob.element.remove();
                     return false;
                 }
@@ -201,29 +203,66 @@
             const newElement = document.createElement("div");
             newElement.className = isLog ? "log" : "obstacle";
             
-            // --- JS-BREDD MATCHAR CSS-BREDD ---
-            const currentWidth = isLog ? 100 : 80;
-            const currentHeight = isLog ? 40 : 80;
+            const visualWidth = isLog ? 100 : 80;
+            const randomX = Math.random() * (AREA_WIDTH - visualWidth);
             
-            const randomX = Math.random() * (AREA_WIDTH - currentWidth);
             newElement.style.left = randomX + "px";
             newElement.style.top = "-100px";
-            
             gameArea.appendChild(newElement);
 
             if (isLog) {
-                logs.push({ element: newElement, x: randomX, y: -100, width: currentWidth, height: currentHeight });
+                // Stockens hitbox matchar bilden
+                logs.push({ element: newElement, x: randomX, y: -100, width: 100, height: 40 });
             } else {
-                obstacles.push({ element: newElement, x: randomX, y: -100, width: currentWidth, height: currentHeight });
+                // Skvaderns hitbox är halverad (40x40) och centrerad i 80x80 bilden
+                obstacles.push({ 
+                    element: newElement, 
+                    x: randomX + 20, 
+                    y: -100 + 20, 
+                    width: 40, 
+                    height: 40 
+                });
             }
         }
+		
+		function createObject(isLog) {
+    const newElement = document.createElement("div");
+    newElement.className = isLog ? "log" : "obstacle";
+    
+    // CSS-storleken förblir densamma (det användaren ser)
+    const visualWidth = isLog ? 100 : 80;
+    const visualHeight = isLog ? 40 : 80;
+    
+    const randomX = Math.random() * (AREA_WIDTH - visualWidth);
+    newElement.style.left = randomX + "px";
+    newElement.style.top = "-100px";
+    
+    gameArea.appendChild(newElement);
+
+    if (isLog) {
+        logs.push({ element: newElement, x: randomX, y: -100, width: visualWidth, height: visualHeight });
+    } else {
+        // HÄR HALVERAR VI HITBOXEN (40x40 istället för 80x80)
+        // Vi lägger till en offset (20px) så att hitboxen hamnar i mitten av bilden
+        obstacles.push({ 
+            element: newElement, 
+            x: randomX + 20, // Flyttar hitboxen till mitten horisontellt
+            y: -100 + 20,    // Flyttar hitboxen till mitten vertikalt
+            width: 40, 
+            height: 40 
+        });
+    }
+}
 
         function checkCollisions() {
             logs.forEach((log, index) => {
                 if (isColliding(beaver, log)) {
                     score += 50;
                     scoreBoard.innerText = score + ":-";
+                    
+                    // REALTIID: Här ändrar vi musikens fart, vilket gameLoop plockar upp nästa frame
                     bgMusic.playbackRate = Math.min(bgMusic.playbackRate + 0.02, 3.0);
+                    
                     log.element.remove();
                     logs.splice(index, 1);
                     new Audio('masen.mp3').play();
