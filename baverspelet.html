@@ -72,7 +72,7 @@
         }
 
         .obstacle {
-            width: px; height: 100px;
+            width: 100px; height: 100px;
             background-image: url('skvader-removebg-preview.png');
         }
 
@@ -255,6 +255,7 @@
                 if (isColliding(beaver, log)) {
                     score += 50;
                     scoreBoard.innerText = score + ":-";
+                    bgMusic.playbackRate = Math.min(bgMusic.playbackRate + 0.02, 3.0);
                     log.element.remove();
                     logs.splice(index, 1);
                     masenSound.play(); // Spela Masen-ljudet vid poäng
