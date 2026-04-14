@@ -210,19 +210,20 @@
         peep();
     }
 
-    function whack(e) {
-        if(!e.isTrusted) return; 
-        if (!this.classList.contains('up')) return;
+function whack(e) {
+    if(!e.isTrusted) return; 
+    if (!this.classList.contains('up')) return;
 
-        // --- NYTT: Spela ljudet vid träff ---
-        masenSound.currentTime = 0; // Återställer ljudet till början (så man kan klicka snabbt)
-        masenSound.play();
-        // ------------------------------------
+    // --- NY LOGIK FÖR POLYFONI (Ljud som går in i varandra) ---
+    // Vi skapar en kopia av ljudet precis vid klicket
+    let clickSound = new Audio('masen.mp3'); 
+    clickSound.play();
+    // -------------------------------------------------------
 
-        score += 10;
-        this.classList.remove('up');
-        scoreBoard.innerText = score + ":-";
-    }
+    score += 10;
+    this.classList.remove('up');
+    scoreBoard.innerText = score + ":-";
+}
 
     holes.forEach(hole => hole.addEventListener('click', whack));
 </script>
