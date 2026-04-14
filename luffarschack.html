@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+    <nav class="menu">
+        <ul>
+            <li><a href="homepage.html"><div>Hem</div></a></li>
+            <li><a href="spel.html"><div>Spel</div></a></li>
+            <li><a href="upgrade.html"><div>Upgradera</div></a></li>
+            <li><a href="omvoila.html"><div>VOILA</div></a></li>
+        </ul>
+    </nav> 
+    Här kan du spela skojiga spel med dina kompisar
+</body>
+    <!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>LagetPay - Strategisk Investering</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f2f5; }
+        .board { 
+            display: grid; 
+            grid-template-columns: repeat(3, 100px); 
+            grid-gap: 5px; 
+            justify-content: center; 
+            margin-top: 20px;
+        }
+        .cell { 
+            width: 100px; height: 100px; 
+            background: white; border: 2px solid #0070ba; 
+            font-size: 2em; display: flex; align-items: center; 
+            justify-content: center; cursor: pointer; 
+        }
+        .cell:hover { background: #e6f0ff; }
+        #status { margin-top: 20px; font-weight: bold; color: #003087; }
+        button { margin-top: 20px; padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Laget Luffarschack</h1>
+    <p>Besegra systemet för att slippa donationer (omöjligt).</p>
+    
+    <div id="status">X:s tur att investera</div>
+    <div class="board" id="board">
+        <div class="cell" onclick="makeMove(this, 0)"></div>
+        <div class="cell" onclick="makeMove(this, 1)"></div>
+        <div class="cell" onclick="makeMove(this, 2)"></div>
+        <div class="cell" onclick="makeMove(this, 3)"></div>
+        <div class="cell" onclick="makeMove(this, 4)"></div>
+        <div class="cell" onclick="makeMove(this, 5)"></div>
+        <div class="cell" onclick="makeMove(this, 6)"></div>
+        <div class="cell" onclick="makeMove(this, 7)"></div>
+        <div class="cell" onclick="makeMove(this, 8)"></div>
+    </div>
+    
+    <button onclick="resetGame()">Starta om för 50:-</button>
+
+    <script>
+        let currentPlayer = "X";
+        let gameState = ["", "", "", "", "", "", "", "", ""];
+        const statusDisplay = document.getElementById('status');
+
+        function makeMove(cell, index) {
+            if (gameState[index] !== "" || checkWinner()) return;
+
+            gameState[index] = currentPlayer;
+            cell.innerText = currentPlayer;
+            
+            if (checkWinner()) {
+                statusDisplay.innerText = "Spelare " + currentPlayer + " vann! Örtugen gratulerar.";
+            } else if (!gameState.includes("")) {
+                statusDisplay.innerText = "Oavgjort! Båda donerar 50:-";
+            } else {
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                statusDisplay.innerText = currentPlayer + ":s tur";
+            }
+        }
+
+        function checkWinner() {
+            const winConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rader
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Kolumner
+                [0, 4, 8], [2, 4, 6]             // Diagonaler
+            ];
+            return winConditions.some(condition => {
+                return condition.every(index => gameState[index] === currentPlayer);
+            });
+        }
+
+        function resetGame() {
+            currentPlayer = "X";
+            gameState = ["", "", "", "", "", "", "", "", ""];
+            statusDisplay.innerText = "X:s tur";
+            document.querySelectorAll('.cell').forEach(cell => cell.innerText = "");
+        }
+    </script>
+</body>
+    
+</body>
+</html>
+</html>
