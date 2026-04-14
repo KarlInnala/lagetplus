@@ -7,7 +7,26 @@
     <link rel="stylesheet" href="menu.css">
 </head>
 <body>
-    
+    <div id="video-intro" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 1.5s ease; /* Här bestäms hur lång uttoningen är */
+">
+    <video id="intro-video" width="100%" height="100%" style="object-fit: cover;" autoplay muted playsinline>
+        <source src="laget+video.mp4" type="video/mp4">
+        Din webbläsare stödjer inte video.
+    </video>
+</div>
+
+
     <nav class="menu">
         <ul>
             <li><a href="homepage.html"><div>Hem</div></a></li>
@@ -17,11 +36,29 @@
             
         </ul>
     </nav>
-    <video width="1080" height="640" autoplay muted>
-  <source src="laget+video.mp4" type="video/mp4">
-  Din webbläsare stödjer inte videotaggen.
+
   <br /><br />
 
-</video>
 </body>
+    
 </html>
+<script>
+    const introDiv = document.getElementById('video-intro');
+    const video = document.getElementById('intro-video');
+
+    // När videon har spelat klart...
+    video.onended = function() {
+        // 1. Starta uttoningen (ändra opacity till 0)
+        introDiv.style.opacity = '0';
+
+        // 2. Vänta tills CSS-transitionen (1.5s) är klar, ta sedan bort diven helt
+        setTimeout(() => {
+            introDiv.style.display = 'none';
+        }, 1500);
+    };
+
+    // Backup: Om videon mot förmodan inte laddar, låt inte användaren fastna på svart skärm
+    video.onerror = function() {
+        introDiv.style.display = 'none';
+    };
+</script>
