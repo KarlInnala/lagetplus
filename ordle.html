@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+    <div id="video-intro" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 1.5s ease; /* Här bestäms hur lång uttoningen är */
+">
+    <video id="intro-video" width="100%" height="100%" style="object-fit: cover;" autoplay playsinline>
+        <source src="laget+video.mp4" type="video/mp4">
+        Din webbläsare stödjer inte video.
+    </video>
+</div>
+
+
+    <nav class="menu">
+        <ul>
+            <li><a href="homepage.html"><div>Hem</div></a></li>
+            <li><a href="spel.html"><div>Spel</div></a></li>
+            <li><a href="upgrade.html"><div>Upgradera</div></a></li>
+            <li><a href="omvoila.html"><div>VOILA</div></a></li>
+            
+        </ul>
+    </nav>
+
+  <br /><br />
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Stockle™ | LagetPay</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f2f5;
+            display: flex; flex-direction: column; align-items: center;
+            margin: 0; min-height: 100vh;
+        }
+        h1 { color: #003087; margin-bottom: 5px; }
+        .subtitle { color: #666; font-style: italic; margin-bottom: 20px; }
+
+        /* Wordle-rutnätet */
+        #game-board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            grid-gap: 5px;
+            padding: 10px;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-gap: 5px;
+        }
+        .tile {
+            width: 50px; height: 50px;
+            border: 2px solid #ccc;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; font-weight: bold; text-transform: uppercase;
+            background-color: white; transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        /* Färgkoder för gissningar */
+        .correct { background-color: #6aaa64 !important; color: white; border-color: #6aaa64; }
+        .present { background-color: #c9b458 !important; color: white; border-color: #c9b458; }
+        .absent { background-color: #787c7e !important; color: white; border-color: #787c7e; }
+
+        #message { margin-top: 20px; font-weight: bold; color: #333; height: 24px; }
+        input { position: absolute; opacity: 0; } /* Dold input för mobil/tangentbord */
+        
+        button {
+            margin-top: 20px; padding: 10px 20px;
+            background-color: #0070ba; color: white; border: none;
+            border-radius: 5px; cursor: pointer; font-weight: bold;
+        }
+    </style>
+</head>
+<body onclick="focusInput()">
+
+    <h1>Stockle™</h1>
+    <p class="subtitle">Gissa dagens disruptiva ord på 5 bokstäver!</p>
+
+    <div id="game-board"></div>
+    <div id="message"></div>
+
+    <input type="text" id="input-catcher" maxlength="5" autofocus>
+
+    <button onclick="location.reload()">Nytt ord</button>
+
+    <script>
+        // Lista på ord (här kan du lägga in egna LagetPay-ord)
+        const words = ["STOCKS", "MASEN", "DAMMEN", "LAGET", "PAY", "ÖRTUG", "BÄVER", "AKTIER", "MASCOIN"]; 
+        // Vi filtrerar så vi bara får ord med exakt 5 bokstäver för enkelhetens skull
+        const fiveLetterWords = ["STOCKS", "ÖRTUG", "BÄVER", "VÄRDE", "BANKA", "MASEN", "KREDIT", "POÄNG"];
+        
+        const secretWord = fiveLetterWords[Math.floor(Math.random() * fiveLetterWords.length)].toUpperCase();
+        
+        let currentAttempt = 0;
+        let currentGuess = "";
+        const board = document.getElementById("game-board");
+        const inputCatcher = document.getElementById("input-catcher");
+
+        // Skapa rutorna
+        for (let i = 0; i < 6; i++) {
+            let row = document.createElement("div");
+            row.className = "row";
+            for (let j = 0; j < 5; j++) {
+                let tile = document.createElement("div");
+                tile.className = "tile";
+                tile.id = `tile-${i}-${j}`;
+                row.appendChild(tile);
+            }
+            board.appendChild(row);
+        }
+
+        function focusInput() { inputCatcher.focus(); }
+
+        inputCatcher.addEventListener("input", (e) => {
+            currentGuess = e.target.value.toUpperCase();
+            updateBoard();
+        });
+
+        inputCatcher.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                if (currentGuess.length === 5) {
+                    submitGuess();
+                } else {
+                    document.getElementById("message").innerText = "För kort ord!";
+                }
+            }
+        });
+
+        function updateBoard() {
+            for (let i = 0; i < 5; i++) {
+                const tile = document.getElementById(`tile-${currentAttempt}-${i}`);
+                tile.innerText = currentGuess[i] || "";
+            }
+        }
+
+        function submitGuess() {
+            const rowTiles = [];
+            for (let i = 0; i < 5; i++) {
+                rowTiles.push(document.getElementById(`tile-${currentAttempt}-${i}`));
+            }
+
+            let wordCopy = secretWord;
+            const guess = currentGuess;
+
+            // Första passet: Hitta alla rätta (gröna)
+            for (let i = 0; i < 5; i++) {
+                if (guess[i] === secretWord[i]) {
+                    rowTiles[i].classList.add("correct");
+                    wordCopy = wordCopy.replace(guess[i], "_");
+                }
+            }
+
+            // Andra passet: Hitta de som finns men är på fel plats (gula)
+            for (let i = 0; i < 5; i++) {
+                if (!rowTiles[i].classList.contains("correct")) {
+                    if (wordCopy.includes(guess[i])) {
+                        rowTiles[i].classList.add("present");
+                        wordCopy = wordCopy.replace(guess[i], "_");
+                    } else {
+                        rowTiles[i].classList.add("absent");
+                    }
+                }
+            }
+
+            if (guess === secretWord) {
+                document.getElementById("message").innerText = "GRATTIS! Du gissade rätt!";
+                inputCatcher.disabled = true;
+            } else if (currentAttempt === 5) {
+                document.getElementById("message").innerText = "Marknadsvärdet föll. Ordet var: " + secretWord;
+                inputCatcher.disabled = true;
+            } else {
+                currentAttempt++;
+                currentGuess = "";
+                inputCatcher.value = "";
+                document.getElementById("message").innerText = "";
+            }
+        }
+    </script>
+</body>
+</html>
