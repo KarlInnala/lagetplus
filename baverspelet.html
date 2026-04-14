@@ -1,4 +1,25 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="menu.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="menu">
+        <ul>
+            <li><a href="homepage.html"><div>Hem</div></a></li>
+            <li><a href="spel.html"><div>Spel</div></a></li>
+            <li><a href="upgrade.html"><div>Upgradera</div></a></li>
+            <li><a href="omvoila.html"><div>VOILA</div></a></li>
+        </ul>
+    </nav>   
+    <div>
+        
+    </div>
+<!DOCTYPE html>
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
@@ -106,6 +127,11 @@
     </div>
 
     <script>
+
+        const bgMusic = new Audio('befälhavaren.mp3');
+        bgMusic.loop = true; // Detta gör att låten börjar om när den tar slut
+        bgMusic.volume = 0.5; // Sänker volymen till 50% så man hör effekterna bättre
+        
         // --- INSTÄLLNINGAR OCH VARIABLER ---
         const gameArea = document.getElementById("game-area");
         const beaverDiv = document.getElementById("beaver");
@@ -134,6 +160,7 @@
 
         function init() {
             gameActive = true;
+            bgMusic.play(); // Startar bakgrundsmusiken
             score = 0;
             scoreBoard.innerText = "0:-";
             rankDisplay.innerText = "Färsking";
@@ -261,8 +288,10 @@
 
         function gameOver(msg) {
             gameActive = false;
+            bgMusic.pause(); // Pausar musiken
+            bgMusic.currentTime = 0; // Spolar tillbaka till början
             clearInterval(objectsInterval);
-            alert("MARKNAVÄRDET PÅ DINA STOCKS KOLLAPSADE!\n\n" + msg + "\n\nDin slutliga donation: " + score + ":-");
+            alert("MARKNADSVÄRDET PÅ DINA STOCKS KOLLAPSADE!\n\n" + msg + "\n\nDin slutliga donation: " + score + ":-");
             // Starta om
             init();
         }
@@ -288,5 +317,8 @@
         init();
 
     </script>
+</body>
+</html>
+
 </body>
 </html>
