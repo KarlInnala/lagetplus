@@ -182,45 +182,49 @@
         }
 
         // --- SPEL-LOOP (Körs 60 gånger i sekunden) ---
-        function gameLoop() {
-            if (!gameActive) return;
+function gameLoop() {
+    if (!gameActive) return;
 
-            let speedMultiplier = bgMusic.playbackRate;
-            log.y += 3 * speedMultiplier;
-            
-            // 1. Flytta stockar
-            logs.forEach(log => {
-                log.y += 3; // Hastighet nedåt
-                log.element.style.top = log.y + "px";
-            });
+    // Vi hämtar hastigheten från musiken. 
+    // Om musiken är på 1.0x hastighet blir multipliern 1.
+    // Om musiken är på 2.0x hastighet blir multipliern 2.
+    let speedMultiplier = bgMusic.playbackRate;
 
-            // 2. Flytta hinder (Skvadrar)
-            obstacles.forEach(ob => {
-                ob.y += 4; // Lite snabbare än stockarna
-                ob.element.style.top = ob.y + "px";
-            });
+    // 1. Flytta stockar
+    logs.forEach(log => {
+        // Bas-hastighet 3 * multiplier
+        log.y += 3 * speedMultiplier; 
+        log.element.style.top = log.y + "px";
+    });
 
-            // 3. Kolla krockar och poäng
-            checkCollisions();
+    // 2. Flytta hinder (Skvadrar)
+    obstacles.forEach(ob => {
+        // Bas-hastighet 4 * multiplier (Skvadrar är alltid lite snabbare!)
+        ob.y += 4 * speedMultiplier; 
+        ob.element.style.top = ob.y + "px";
+    });
 
-            // 4. Rensa objekt som flytit utanför
-            logs = logs.filter(log => {
-                if (log.y > AREA_HEIGHT) {
-                    log.element.remove();
-                    return false;
-                }
-                return true;
-            });
-            obstacles = obstacles.filter(ob => {
-                if (ob.y > AREA_HEIGHT) {
-                    ob.element.remove();
-                    return false;
-                }
-                return true;
-            });
+    // 3. Kolla krockar och poäng
+    checkCollisions();
 
-            requestAnimationFrame(gameLoop);
+    // 4. Rensa objekt som flytit utanför (viktigt för att datorn inte ska bli seg)
+    logs = logs.filter(log => {
+        if (log.y > AREA_HEIGHT) {
+            log.element.remove();
+            return false;
         }
+        return true;
+    });
+    obstacles = obstacles.filter(ob => {
+        if (ob.y > AREA_HEIGHT) {
+            ob.element.remove();
+            return false;
+        }
+        return true;
+    });
+
+    requestAnimationFrame(gameLoop);
+}
 
         // --- OBJEKTGENERERING ---
         function generateObjects() {
