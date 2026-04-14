@@ -70,7 +70,7 @@
 </head>
 <body onclick="focusInput()">
 
-    <h1>Stockle™</h1>
+    <h1>Ordle™</h1>
     <p class="subtitle">Gissa dagens disruptiva ord på 5 bokstäver!</p>
 
     <div id="game-board"></div>
@@ -82,9 +82,9 @@
 
     <script>
         // Lista på ord (här kan du lägga in egna LagetPay-ord)
-        const words = ["STOCKS", "MASEN", "DAMMEN", "LAGET", "PAY", "ÖRTUG", "BÄVER", "AKTIER", "MASCOIN"]; 
+        const words = ["STOCKS", "MASEN", "KAMMA", "LAGET", "BÄVER", "ÖRTUG", "GNAGA", "SATOR", "KREDD"]; 
         // Vi filtrerar så vi bara får ord med exakt 5 bokstäver för enkelhetens skull
-        const fiveLetterWords = ["STOCKS", "ÖRTUG", "BÄVER", "VÄRDE", "BANKA", "MASEN", "KREDIT", "POÄNG"];
+        const fiveLetterWords = ["STOCKS", "MASEN", "KAMMA", "LAGET", "BÄVER", "ÖRTUG", "GNAGA", "SATOR", "KREDD"]; 
         
         const secretWord = fiveLetterWords[Math.floor(Math.random() * fiveLetterWords.length)].toUpperCase();
         
