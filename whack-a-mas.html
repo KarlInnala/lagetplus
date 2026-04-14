@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upgradera</title>
+    <title>Whack-a-Mas</title>
     <link rel="stylesheet" href="menu.css">
 </head>
 <body>
@@ -78,15 +78,21 @@
 
         /* Själva örtugen/myntet */
         .coin {
-            width: 100%;
-            height: 100%;
-            background-image: url('masen-removebg-preview.png'); /* <-- ANVÄND DIN LOGGA HÄR */
-            background-size: cover;
-            position: absolute;
-            bottom: -100%; /* Startar gömd under hålet */
-            transition: bottom 0.1s ease-out; /* Hastigheten myntet dyker upp */
-            border-radius: 50%;
-        }
+    width: 100%;
+    height: 100%;
+    background-image: url('tf.png'); /* <-- ANVÄND DIN LOGGA HÄR */
+    
+    /* --- NYTT: De här raderna centrerar bilden och får den att täcka hålet --- */
+    background-size: cover;    /* NY: Bilden sträcks för att täcka hela hålet utan att bli ihoptryckt */
+    background-position: center; /* NY: Bildens centrum placeras i hålets centrum */
+    background-repeat: no-repeat; /* NY: Förhindrar att bilden upprepas om hålet är stort */
+    /* ------------------------------------------------------------------------ */
+
+    position: absolute;
+    bottom: -100%; /* Startar gömd under hålet */
+    transition: bottom 0.1s ease-out; /* Hastigheten myntet dyker upp */
+    border-radius: 50%;
+}
 
         /* Klassen som JavaScript lägger till för att visa myntet */
         .hole.up .coin {
