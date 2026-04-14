@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bäverspelet™. Bli en äkta stocks-magnat!</title>
-    <link rel="stylesheet" href="menu.css">
-    <link rel="stylesheet" href="style.css">
-    
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,14 +31,14 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-        /* Spelobjekten */
         #beaver, .log, .obstacle {
             position: absolute;
-            background-size: cover; /* Ändrat till cover för bättre centrerat ansikte */
+            background-size: contain; /* Ändrat till contain för att se hela bilden i hitboxen */
             background-repeat: no-repeat;
             background-position: center;
         }
 
+        /* --- SYNKRONISERADE STORLEKAR --- */
         #beaver {
             width: 80px; height: 80px;
             background-image: url('beaver-removebg-preview.png');
@@ -60,18 +57,34 @@
 
         .stats {
             display: flex;
-            justify-content: space-around;
+            flex-direction: column;
+            align-items: center;
             width: 480px;
             margin-top: 20px;
             font-size: 1.2em;
             font-weight: bold;
             color: #333;
         }
+        .stat-row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 10px;
+        }
         .stat-box {
             background: white;
             padding: 10px 20px;
             border-radius: 10px;
             border: 1px solid #cce0ff;
+        }
+        button {
+            padding: 10px 25px;
+            background-color: #0070ba;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -86,16 +99,14 @@
         </div>
 
         <div class="stats">
-            <div class="stat-box">Marknadsvärde: <span id="score">0:-</span></div>
-            <div class="stat-box">Status: <span id="rank">Praktikant</span></div>
-            <button id="reset-btn" onclick="manualReset()" style="margin-top: 20px; background-color: #e74c3c;">
-    Starta om
-    </button>
+            <div class="stat-row">
+                <div class="stat-box">Marknadsvärde: <span id="score">0:-</span></div>
+                <div class="stat-box">Status: <span id="rank">Praktikant</span></div>
+            </div>
+            <button id="reset-btn" onclick="manualReset()" style="background-color: #e74c3c;">
+                Starta om
+            </button>
         </div>
-
-        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-            Styr med piltangenterna. Undvik skvadrarna – de gillar inte tillväxter!
-        </p>
     </div>
 
     <script>
@@ -113,7 +124,8 @@
         const AREA_HEIGHT = 600;
         const GRID_SIZE = 40;
 
-        let beaver = { x: AREA_WIDTH / 2 - 50, y: AREA_HEIGHT - 110, width: 100, height: 100 };
+        // --- JS-VÄRDEN MATCHAR CSS-VÄRDEN ---
+        let beaver = { x: AREA_WIDTH / 2 - 40, y: AREA_HEIGHT - 90, width: 80, height: 80 };
         let score = 0;
         let gameActive = false;
         let objectsInterval;
@@ -122,15 +134,15 @@
 
         function init() {
             gameActive = true;
-            bgMusic.playbackRate = 1.0; // Återställer hastigheten vid start
-            bgMusic.play().catch(e => console.log("Musik kräver klick för att starta"));
+            bgMusic.playbackRate = 1.0;
+            bgMusic.play().catch(e => console.log("Musik startar vid interaktion"));
             
             score = 0;
             scoreBoard.innerText = "0:-";
             rankDisplay.innerText = "Färsking";
             
-            beaver.x = AREA_WIDTH / 2 - 50;
-            beaver.y = AREA_HEIGHT - 110;
+            beaver.x = AREA_WIDTH / 2 - 40;
+            beaver.y = AREA_HEIGHT - 90;
             updateBeaverPosition();
 
             logs.forEach(log => log.element.remove());
@@ -147,7 +159,6 @@
         function gameLoop() {
             if (!gameActive) return;
 
-            // Realtids-acceleration från musiken
             let speedMultiplier = bgMusic.playbackRate || 1;
 
             logs.forEach(log => {
@@ -190,17 +201,20 @@
             const newElement = document.createElement("div");
             newElement.className = isLog ? "log" : "obstacle";
             
-            const currentWidth = isLog ? 150 : 110;
+            // --- JS-BREDD MATCHAR CSS-BREDD ---
+            const currentWidth = isLog ? 100 : 80;
+            const currentHeight = isLog ? 40 : 80;
+            
             const randomX = Math.random() * (AREA_WIDTH - currentWidth);
             newElement.style.left = randomX + "px";
-            newElement.style.top = "-120px";
+            newElement.style.top = "-100px";
             
             gameArea.appendChild(newElement);
 
             if (isLog) {
-                logs.push({ element: newElement, x: randomX, y: -120, width: 150, height: 60 });
+                logs.push({ element: newElement, x: randomX, y: -100, width: currentWidth, height: currentHeight });
             } else {
-                obstacles.push({ element: newElement, x: randomX, y: -120, width: 110, height: 110 });
+                obstacles.push({ element: newElement, x: randomX, y: -100, width: currentWidth, height: currentHeight });
             }
         }
 
@@ -209,24 +223,17 @@
                 if (isColliding(beaver, log)) {
                     score += 50;
                     scoreBoard.innerText = score + ":-";
-                    
-                    // Öka musikhastigheten i realtid
                     bgMusic.playbackRate = Math.min(bgMusic.playbackRate + 0.02, 3.0);
-                    
                     log.element.remove();
                     logs.splice(index, 1);
-                    
-                    // Polyfoniskt ljud (kan spelas flera samtidigt)
-                    let soundInstance = new Audio('masen.mp3');
-                    soundInstance.play();
-                    
+                    new Audio('masen.mp3').play();
                     updateRank();
                 }
             });
 
             obstacles.forEach(ob => {
                 if (isColliding(beaver, ob)) {
-                    gameOver("OBS! Krock med skvader. Administrationsavgift: 100% av ditt stocksvärde.");
+                    gameOver("Krock med skvader! Administrationsavgift tillämpad.");
                 }
             });
         }
@@ -251,7 +258,19 @@
             bgMusic.pause();
             bgMusic.currentTime = 0;
             clearInterval(objectsInterval);
-            alert("MARKNADSVÄRDET PÅ DINA STOCKS KOLLAPSADE!\n\n" + msg + "\n\nDin slutliga donation: " + score + ":-");
+            alert(msg + "\nDin slutliga donation: " + score + ":-");
+            init();
+        }
+
+        function manualReset() {
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+            bgMusic.playbackRate = 1.0; 
+            clearInterval(objectsInterval);
+            logs.forEach(log => log.element.remove());
+            obstacles.forEach(ob => ob.element.remove());
+            logs = [];
+            obstacles = [];
             init();
         }
 
@@ -268,24 +287,7 @@
             beaverDiv.style.left = beaver.x + "px";
             beaverDiv.style.top = beaver.y + "px";
         }
-        function manualReset() {
-    // 1. Stoppa och nollställ musiken helt
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
-    bgMusic.playbackRate = 1.0; 
 
-    // 2. Stoppa genereringen av nya objekt tillfälligt
-    clearInterval(objectsInterval);
-
-    // 3. Rensa alla nuvarande objekt på skärmen
-    logs.forEach(log => log.element.remove());
-    obstacles.forEach(ob => ob.element.remove());
-    logs = [];
-    obstacles = [];
-
-    // 4. Kör den vanliga init-funktionen för att starta om allt
-    init();
-}
         init();
     </script>
 </body>
