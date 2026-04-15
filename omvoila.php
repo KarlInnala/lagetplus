@@ -59,7 +59,7 @@
     
 </body>
 </html>
-
+test
 <?php include 'server_stats.php'; ?>
 
 <section id="command-center" style="background: #1a1a1a; color: #2ecc71; padding: 50px 10%; font-family: 'Courier New', monospace; border-top: 5px solid #003087;">
