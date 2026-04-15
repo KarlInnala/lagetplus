@@ -13,7 +13,7 @@
             <li><a href="homepage.html"><div>Hem</div></a></li>
             <li><a href="spel.html"><div>Spel</div></a></li>
             <li><a href="upgrade.html"><div>Upgradera</div></a></li>
-            <li><a href="omvoila.html"><div>VOILA</div></a></li>
+            <li><a href="omvoila.php"><div>VOILA</div></a></li>
         </ul>
     </nav>   
     <div>
