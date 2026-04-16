@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bröderna Byströms Begravningsbyrå - Skuleskogen</title>
+    <title>Bröderna Byströms Begravningsbyrå-spelet</title>
     <style>
         body { background: #1a1a1a; color: #ddd; text-align: center; font-family: 'Verdana', sans-serif; margin: 0; padding: 0; touch-action: manipulation; }
         canvas { border: 5px solid #444; background: #333; box-shadow: 0 0 25px rgba(0,0,0,0.7); max-width: 100%; height: auto; }
@@ -69,7 +69,7 @@
 </head>
 <body>
     <h1>BRÖDERNA BYSTRÖM</h1>
-    <div class="controls-info">Piltangenter eller touch-knappar till höger</div>
+    <div class="controls-info">Använd piltangenterna eller touch-knapparna till höger</div>
     
     <audio id="bgMusic" src="bystrom.mp3" loop></audio>
     <audio id="soundPolis" src="bystrom_polis.mp3"></audio>
@@ -84,8 +84,10 @@
         </div>
 
         <div id="startOverlay">
-            <h2>REDO FÖR E4:an?</h2>
-            <p>"I vårat yrke är det riskfritt att köre full!"</p>
+            <h2>REDO FÖR E4:AN NORR MOT Ö-VIK?</h2>
+            <p>"I vårat yrke är det riskfritt att köre full!"</p> 
+			<br>
+			<p>- Enar Byström</p> 
             <button class="action-btn" onclick="startGame()">STARTA SPELET</button>
         </div>
 
@@ -102,7 +104,7 @@
             <div class="bottle-icon" style="background: #8B4513;"></div>
             <div class="tutorial-text">
                 <h3>Mellanpilsner</h3>
-                <p>+1 Poäng. Ger Enar en lätt yrsel.</p>
+                <p>+1 Poäng. Gör Enar rattful, det är vad som sker.</p>
             </div>
         </div>
         <div class="tutorial-item">
@@ -134,16 +136,17 @@ const soundSlant = document.getElementById('soundSlant');
 let car = { x: 100, y: 180, w: 110, h: 45, speed: 3 };
 let roadOffset = 0;
 let drunkFactor = 0;
-let baseDrunkSpeed = 0.2; // Hur mycket det svajar normalt
+let baseDrunkSpeed = 0.2; 
 let police = { x: 2000, y: 150, w: 85, h: 45, speed: 6 }; 
 let isGameOver = false;
 let isGameStarted = false;
+let animationId = null;
 
-// Poäng och Samlarobjekt
+let coffin = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, active: false };
+let body = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, active: false };
+
 let score = 0;
 let pickups = [];
-
-// Miljödekorationer
 let decorations = [];
 let signs = [];
 
@@ -161,6 +164,27 @@ function createDecor() {
 }
 createDecor();
 
+function triggerCrash() {
+    isGameOver = true;
+    bgMusic.pause();
+    overlay.style.display = "block";
+    document.getElementById('finalScore').innerText = "Du samlade: " + score + " poäng";
+    
+    coffin.active = true;
+    coffin.x = car.x + 10;
+    coffin.y = car.y + car.h/2;
+    coffin.vx = -1.5 - Math.random() * 1; 
+    coffin.vy = (Math.random() - 0.5) * 3;
+    coffin.angle = 0;
+    
+    body.active = true;
+    body.x = coffin.x;
+    body.y = coffin.y;
+    body.vx = coffin.vx - 0.75; 
+    body.vy = coffin.vy + (Math.random() - 0.5) * 1.5;
+    body.angle = 0;
+}
+
 function spawnPickup() {
     if (Math.random() < 0.008) { 
         let rand = Math.random();
@@ -168,19 +192,12 @@ function spawnPickup() {
         if (rand > 0.95) type = 'renault';
         else if (rand > 0.75) type = 'genever';
 
-        pickups.push({
-            x: 850,
-            y: 70 + Math.random() * 260,
-            w: 15,
-            h: 25,
-            type: type
-        });
+        pickups.push({ x: 850, y: 70 + Math.random() * 260, w: 15, h: 25, type: type });
     }
 }
 
 let currentQuote = "";
 let quoteTimer = 0;
-
 const citat = [
     "I vårat yrke är det riskfritt att köra full!",
     "Tror du polisen stoppar en likbil på ljusan dan?",
@@ -192,14 +209,14 @@ const citat = [
 ];
 
 function startGame() {
+    if (isGameStarted) return;
     isGameStarted = true;
     startOverlay.style.display = "none";
-    bgMusic.play().catch(e => console.log("Musik kunde inte starta pga webbläsarrestriktioner"));
-    requestAnimationFrame(draw);
+    bgMusic.play().catch(e => console.log("Ljudblock"));
+    animationId = requestAnimationFrame(draw);
 }
 
 function resetGame() {
-    // Stoppa Game Over-ljuden omedelbart
     soundPolis.pause();
     soundPolis.currentTime = 0;
     soundSlant.pause();
@@ -213,11 +230,12 @@ function resetGame() {
     baseDrunkSpeed = 0.2;
     pickups = [];
     isGameOver = false;
+    coffin.active = false;
+    body.active = false;
     overlay.style.display = "none";
     signs = [{ x: 1200, label: "SUNDSVALL", dir: "left" }];
     bgMusic.currentTime = 0;
     bgMusic.play();
-    requestAnimationFrame(draw);
 }
 
 function moveUp() { if(isGameStarted && !isGameOver) car.y -= 35; }
@@ -229,15 +247,12 @@ document.getElementById('btnUp').addEventListener('mousedown', moveUp);
 document.getElementById('btnDown').addEventListener('mousedown', moveDown);
 
 function draw() {
-    if (!isGameStarted || isGameOver) return;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     ctx.fillStyle = "#1e3d1e"; 
     ctx.fillRect(0, 0, 800, 400);
     
     decorations.forEach(d => {
-        d.x -= car.speed;
+        if (!isGameOver) d.x -= car.speed;
         if(d.x < -20) { d.x = 820; d.y = Math.random() < 0.5 ? Math.random() * 35 : 365 + Math.random() * 30; }
         if(d.type === 'flower') {
             ctx.fillStyle = d.color;
@@ -249,7 +264,7 @@ function draw() {
     });
 
     signs.forEach((s) => {
-        s.x -= car.speed;
+        if (!isGameOver) s.x -= car.speed;
         ctx.fillStyle = "#888"; ctx.fillRect(s.x + 40, 15, 4, 40);
         ctx.fillStyle = "white"; ctx.fillRect(s.x, 15, 85, 25);
         ctx.fillStyle = "#0055aa"; ctx.fillRect(s.x + 2, 17, 81, 21);
@@ -268,32 +283,27 @@ function draw() {
     ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
     ctx.setLineDash([40, 40]); ctx.lineDashOffset = roadOffset; 
     ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(800, 200); ctx.stroke();
-    roadOffset += car.speed;
+    if (!isGameOver) roadOffset += car.speed;
 
-    drunkFactor += (Math.random() - 0.5) * baseDrunkSpeed;
-    drunkFactor *= 0.97; car.y += drunkFactor;
-
-    if(car.y < 50 || car.y > 350 - car.h) { 
-        isGameOver = true;
-        deathTitle.innerText = "UT FÖR EN BRANT!";
-        document.getElementById('finalScore').innerText = "Du samlade: " + score + " poäng";
-        overlay.style.display = "block";
-        bgMusic.pause();
-        soundSlant.play();
+    if (!isGameOver) {
+        drunkFactor += (Math.random() - 0.5) * baseDrunkSpeed;
+        drunkFactor *= 0.97; car.y += drunkFactor;
+        if(car.y < 50 || car.y > 350 - car.h) { 
+            deathTitle.innerText = "UT FÖR EN BRANT!";
+            soundSlant.play();
+            triggerCrash();
+        }
+        spawnPickup();
     }
 
-    spawnPickup()
     pickups.forEach((p, index) => {
-        p.x -= car.speed;
-        if(p.type === 'öl') ctx.fillStyle = '#8B4513';
-        else if(p.type === 'genever') ctx.fillStyle = '#2E8B57';
-        else ctx.fillStyle = '#000000'; 
-
+        if (!isGameOver) p.x -= car.speed;
+        ctx.fillStyle = p.type === 'öl' ? '#8B4513' : (p.type === 'genever' ? '#2E8B57' : '#000000');
         ctx.fillRect(p.x, p.y, p.w, p.h);
         ctx.fillStyle = p.type === 'renault' ? 'red' : 'white';
         ctx.fillRect(p.x + 2, p.y + 10, p.w - 4, 8);
 
-        if (car.x < p.x + p.w && car.x + car.w > p.x && car.y < p.y + p.h && car.y + car.h > p.y) {
+        if (!isGameOver && car.x < p.x + p.w && car.x + car.w > p.x && car.y < p.y + p.h && car.y + car.h > p.y) {
             if (p.type === 'öl') { score += 1; baseDrunkSpeed += 0.01; }
             else if (p.type === 'genever') { score += 5; baseDrunkSpeed += 0.04; }
             else { score += 15; baseDrunkSpeed += 0.08; }
@@ -302,9 +312,7 @@ function draw() {
         if(p.x < -50) pickups.splice(index, 1);
     });
 
-    if (police.x > 1990) police.y = 60 + Math.random() * 230;
-    
-    // --- TOP-DOWN POLISBIL (VIT) ---
+    // Polis
     ctx.fillStyle = "white"; 
     ctx.fillRect(police.x, police.y, police.w, police.h);
     ctx.fillStyle = "#003399";
@@ -315,73 +323,77 @@ function draw() {
     ctx.fillRect(police.x + police.w - 25, police.y + 8, 8, police.h - 16);
     ctx.save();
     ctx.translate(police.x + police.w/2, police.y + police.h/2);
-    ctx.fillStyle = "blue";
-    ctx.font = "bold 12px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("POLIS", 0, 5);
+    ctx.fillStyle = "blue"; ctx.font = "bold 12px Arial"; ctx.textAlign = "center"; ctx.fillText("POLIS", 0, 5);
     ctx.restore();
-    ctx.fillStyle = "#888";
-    ctx.fillRect(police.x + 25, police.y + 5, 6, police.h - 10);
-    ctx.fillStyle = "blue";
-    ctx.fillRect(police.x + 25, police.y + police.h/2 - 10, 6, 20);
-    ctx.fillStyle = "#ffd700"; 
-    ctx.fillRect(police.x, police.y + 5, 5, 10); 
-    ctx.fillRect(police.x, police.y + police.h - 15, 5, 10);
+    ctx.fillStyle = "#888"; ctx.fillRect(police.x + 25, police.y + 5, 6, police.h - 10);
+    ctx.fillStyle = "blue"; ctx.fillRect(police.x + 25, police.y + police.h/2 - 10, 6, 20);
+    ctx.fillStyle = "#ffd700"; ctx.fillRect(police.x, police.y + 5, 5, 10); ctx.fillRect(police.x, police.y + police.h - 15, 5, 10);
     
-    police.x -= police.speed;
-
-    if (car.x < police.x + police.w && car.x + car.w > police.x && car.y < police.y + police.h && car.y + car.h > police.y) {
-        isGameOver = true; deathTitle.innerText = "PANG! FRONTALKROCK!";
-        document.getElementById('finalScore').innerText = "Du samlade: " + score + " poäng";
-        overlay.style.display = "block";
-        bgMusic.pause();
-        soundPolis.play();
+    if (!isGameOver) {
+        police.x -= police.speed;
+        if(police.x < -150) { police.x = 2200; police.y = 60 + Math.random() * 230; }
+        if (car.x < police.x + police.w && car.x + car.w > police.x && car.y < police.y + police.h && car.y + car.h > police.y) {
+            deathTitle.innerText = "PANG! FRONTALKROCK!";
+            soundPolis.play();
+            triggerCrash();
+        }
     }
-
-    if (police.x < car.x + 500 && police.x > car.x + 300 && quoteTimer <= 0) {
-        currentQuote = citat[Math.floor(Math.random() * citat.length)]; quoteTimer = 180; 
-    }
-    if(police.x < -150) police.x = 2200;
 
     if (quoteTimer > 0) {
         ctx.font = "bold 14px Arial, sans-serif"; 
         let textWidth = ctx.measureText(currentQuote).width;
-        ctx.fillStyle = "white";
-        ctx.beginPath();
-        ctx.roundRect(car.x, car.y - 65, textWidth + 20, 35, 12);
-        ctx.fill();
-        ctx.fillStyle = "black";
-        ctx.fillText(currentQuote, car.x + 10, car.y - 42);
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.roundRect(car.x, car.y - 65, textWidth + 20, 35, 12); ctx.fill();
+        ctx.fillStyle = "black"; ctx.fillText(currentQuote, car.x + 10, car.y - 42);
         quoteTimer--;
+    } else if (!isGameOver && police.x < car.x + 500 && police.x > car.x + 300) {
+        currentQuote = citat[Math.floor(Math.random() * citat.length)]; quoteTimer = 180;
     }
 
-    // --- Byströms bil (Top-down) Roterad 180 grader ---
+    // Byströms bil
     ctx.fillStyle = "black";
     ctx.fillRect(car.x, car.y, car.w, car.h);
-    
-    // Vindruta (flyttad till HÖGER sida för att visa 180 graders rotation)
-    ctx.fillStyle = "#333";
-    ctx.fillRect(car.x + car.w - 27, car.y + 5, 12, car.h - 10);
-    
-    // Vita korset på taket (speglat för rotation)
-    ctx.fillStyle = "white";
-    ctx.fillRect(car.x + car.w - 80, car.y + car.h/2 - 3, 40, 6); // Långa armen
-    ctx.fillRect(car.x + car.w - 56, car.y + 10, 6, car.h - 20); // Tvärbalken
-    
-    // Strålkastare (Gula - Framåt på HÖGER sida)
-    ctx.fillStyle = "#ffd700";
-    ctx.fillRect(car.x + car.w - 5, car.y + 5, 5, 12); 
-    ctx.fillRect(car.x + car.w - 5, car.y + car.h - 17, 5, 12);
+    ctx.fillStyle = "#333"; ctx.fillRect(car.x + car.w - 27, car.y + 5, 12, car.h - 10);
+    ctx.fillStyle = "white"; ctx.fillRect(car.x + car.w - 80, car.y + car.h/2 - 3, 40, 6); ctx.fillRect(car.x + car.w - 56, car.y + 10, 6, car.h - 20);
+    ctx.fillStyle = "#ffd700"; ctx.fillRect(car.x + car.w - 5, car.y + 5, 5, 12); ctx.fillRect(car.x + car.w - 5, car.y + car.h - 17, 5, 12);
+    ctx.fillStyle = "red"; ctx.fillRect(car.x, car.y + 5, 5, 12); ctx.fillRect(car.x, car.y + car.h - 17, 5, 12);
 
-    // Baklyktor (Röda - Bakåt på VÄNSTER sida)
-    ctx.fillStyle = "red";
-    ctx.fillRect(car.x, car.y + 5, 5, 12);
-    ctx.fillRect(car.x, car.y + car.h - 17, 5, 12);
+    if (coffin.active) {
+        coffin.x += coffin.vx; coffin.y += coffin.vy;
+        coffin.vx *= 0.98; coffin.vy *= 0.98; coffin.angle += coffin.vx * 0.01;
+        if (coffin.x < 15) coffin.x = 15; if (coffin.x > 785) coffin.x = 785;
+        if (coffin.y < 15) coffin.y = 15; if (coffin.y > 385) coffin.y = 385;
+        
+        ctx.save(); 
+        ctx.translate(coffin.x, coffin.y); 
+        ctx.rotate(coffin.angle);
+        
+        // Kistans kropp (utan guldkant)
+        ctx.fillStyle = "#5D4037"; 
+        ctx.fillRect(-15, -8, 30, 16);
+        
+        // Vitt kors (Öst-Väst orientering)
+        ctx.fillStyle = "white";
+        // Långa stapeln (horisontell)
+        ctx.fillRect(-8, -1, 16, 2);
+        // Korta stapeln (vertikal)
+        ctx.fillRect(2, -4, 2, 8);
+        
+        ctx.restore();
+    }
+    if (body.active) {
+        body.x += body.vx; body.y += body.vy;
+        body.vx *= 0.98; body.vy *= 0.98; body.angle -= body.vx * 0.015;
+        if (body.x < 10) body.x = 10; if (body.x > 790) body.x = 790;
+        if (body.y < 10) body.y = 10; if (body.y > 390) body.y = 390;
+        ctx.save(); ctx.translate(body.x, body.y); ctx.rotate(body.angle);
+        ctx.fillStyle = "#FFE0B2"; ctx.beginPath(); ctx.arc(0, -5, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#212121"; ctx.fillRect(-4, -1, 8, 12); ctx.restore();
+    }
 
     ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(10, 10, 150, 40);
     ctx.fillStyle = "#FFD700"; ctx.font = "bold 16px Arial"; ctx.fillText("POÄNG: " + score, 20, 35);
 
-    requestAnimationFrame(draw);
+    animationId = requestAnimationFrame(draw);
 }
 
 window.addEventListener('keydown', (e) => {
