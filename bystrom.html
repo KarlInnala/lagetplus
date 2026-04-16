@@ -130,7 +130,7 @@ const bgMusic = document.getElementById('bgMusic');
 let car = { x: 100, y: 180, w: 110, h: 45, speed: 4 };
 let roadOffset = 0;
 let drunkFactor = 0;
-let baseDrunkSpeed = 0.45; // Hur mycket det svajar normalt
+let baseDrunkSpeed = 0.2; // Hur mycket det svajar normalt
 let police = { x: 2000, y: 150, w: 85, h: 45, speed: 6 }; 
 let isGameOver = false;
 let isGameStarted = false;
@@ -199,7 +199,7 @@ function resetGame() {
     drunkFactor = 0;
     roadOffset = 0;
     score = 0;
-    baseDrunkSpeed = 0.45;
+    baseDrunkSpeed = 0.2;
     pickups = [];
     isGameOver = false;
     overlay.style.display = "none";
@@ -282,9 +282,9 @@ function draw() {
         ctx.fillRect(p.x + 2, p.y + 10, p.w - 4, 8);
 
         if (car.x < p.x + p.w && car.x + car.w > p.x && car.y < p.y + p.h && car.y + car.h > p.y) {
-            if (p.type === 'öl') { score += 1; baseDrunkSpeed += 0.03; }
-            else if (p.type === 'genever') { score += 5; baseDrunkSpeed += 0.12; }
-            else { score += 15; baseDrunkSpeed += 0.2; }
+            if (p.type === 'öl') { score += 1; baseDrunkSpeed += 0.01; }
+            else if (p.type === 'genever') { score += 5; baseDrunkSpeed += 0.04; }
+            else { score += 15; baseDrunkSpeed += 0.08; }
             pickups.splice(index, 1);
         }
         if(p.x < -50) pickups.splice(index, 1);
