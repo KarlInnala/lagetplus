@@ -140,10 +140,10 @@
     <div class="game-container">
         <div id="pre-timer">3</div>
         <h1>Whack-a-Mas™</h1>
-        <p class="subtitle">Ge donationer genom klicka på Masen!</p>
+        <p class="subtitle">Whacka Masen genom att klicka på han när han dyker upp!!</p>
 
         <div class="stats">
-            <div class="stat-box">Donationer: <span id="score">0:-</span></div>
+            <div class="stat-box">Antal whackade masar: <span id="score">0:-</span></div>
             <div class="stat-box">Tid kvar: <span id="time">15</span>s</div>
         </div>
 
@@ -211,7 +211,7 @@
     function startCountdown() {
         startBtn.disabled = true;
         score = 0;
-        scoreBoard.innerText = "0:-";
+        scoreBoard.innerText = "0";
         timeUp = false;
         timeLeft = 15;
         timeDisplay.innerText = timeLeft;
@@ -258,7 +258,7 @@
     }
 
     function startGame() {
-        startBtn.innerText = "Investerar...";
+        startBtn.innerText = "Startar...";
         countdown = setInterval(() => {
             timeLeft--;
             timeDisplay.innerText = timeLeft;
@@ -268,7 +268,7 @@
                 startBtn.disabled = false;
                 startBtn.innerText = "Starta Om";
                 setTimeout(() => {
-                    alert("Rundan klar! Du lyckades donera " + score + ":- till Örtugens nya padel-hall. Bra jobbat!");
+                    alert("Rundan klar! Du lyckades whacka " + score + " stycken masar. Bra jobbat!");
                 }, 100);
             }
         }, 1000);
@@ -280,7 +280,7 @@
         if (!this.classList.contains('up')) return;
 
         new Audio('masen.mp3').play();
-        score += 10;
+        score += 1;
         this.classList.remove('up');
         scoreBoard.innerText = score + ":-";
     }
