@@ -69,7 +69,7 @@
 </head>
 <body>
     <h1>BRÖDERNA BYSTRÖM-SPELET</h1>
-    <div class="controls-info">Använd piltangenterna eller touch-knapparna till höger</div>
+    <div class="controls-info">Använd piltangenterna eller touch-knappar till höger</div>
     
     <audio id="bgMusic" src="bystrom.mp3" loop></audio>
     <audio id="soundPolis" src="bystrom_polis.mp3"></audio>
@@ -136,7 +136,7 @@ let car = { x: 100, y: 180, w: 110, h: 45, speed: 3 };
 let roadOffset = 0;
 let drunkFactor = 0;
 let baseDrunkSpeed = 0.2; 
-let police = { x: 2000, y: 150, w: 85, h: 45, speed: 6 }; 
+let police = { x: 2000, y: 150, w: 85, h: 45, speed: 6, type: 'polis' }; 
 let isGameOver = false;
 let isGameStarted = false;
 let animationId = null;
@@ -223,6 +223,8 @@ function resetGame() {
 
     car.y = 180;
     police.x = 2000;
+    police.type = 'polis';
+    police.w = 85;
     drunkFactor = 0;
     roadOffset = 0;
     score = 0;
@@ -264,88 +266,27 @@ function draw() {
 
     signs.forEach((s) => {
         if (!isGameOver) s.x -= car.speed;
-        
-        // Skyltens dimensioner och form
         const signW = 100;
         const signH = 25;
-        const tipLen = 15; // Längden på pilspetsen
-        
-        ctx.fillStyle = "#888"; // Stolpe
+        const tipLen = 15;
+        ctx.fillStyle = "#888"; 
         ctx.fillRect(s.x + signW/2 - 2, 15, 4, 40); 
-
         ctx.font = "bold 10px Arial";
         ctx.textAlign = "center";
-        
         if (s.dir === "left") {
-            // Skapa pilformad skylt åt vänster (Sundsvall)
-            // Kant (vit)
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.moveTo(s.x + tipLen, 15); // Top höger om spets
-            ctx.lineTo(s.x + signW, 15); // Top höger hörn
-            ctx.lineTo(s.x + signW, 15 + signH); // Botten höger hörn
-            ctx.lineTo(s.x + tipLen, 15 + signH); // Botten höger om spets
-            ctx.lineTo(s.x, 15 + signH/2); // Spetsen
-            ctx.closePath();
-            ctx.fill();
-
-            // Bakgrund (blå)
-            ctx.fillStyle = "#0055aa";
-            ctx.beginPath();
-            ctx.moveTo(s.x + tipLen + 2, 17);
-            ctx.lineTo(s.x + signW - 2, 17);
-            ctx.lineTo(s.x + signW - 2, 15 + signH - 2);
-            ctx.lineTo(s.x + tipLen + 2, 15 + signH - 2);
-            ctx.lineTo(s.x + 3, 15 + signH/2);
-            ctx.closePath();
-            ctx.fill();
-
-            // Text
-            ctx.fillStyle = "white";
-            ctx.fillText(s.label, s.x + (signW + tipLen)/2, 31);
-
+            ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(s.x + tipLen, 15); ctx.lineTo(s.x + signW, 15); ctx.lineTo(s.x + signW, 15 + signH); ctx.lineTo(s.x + tipLen, 15 + signH); ctx.lineTo(s.x, 15 + signH/2); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#0055aa"; ctx.beginPath(); ctx.moveTo(s.x + tipLen + 2, 17); ctx.lineTo(s.x + signW - 2, 17); ctx.lineTo(s.x + signW - 2, 15 + signH - 2); ctx.lineTo(s.x + tipLen + 2, 15 + signH - 2); ctx.lineTo(s.x + 3, 15 + signH/2); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "white"; ctx.fillText(s.label, s.x + (signW + tipLen)/2, 31);
         } else {
-            // Skapa pilformad skylt åt höger (Ö-vik)
-            // Kant (vit)
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.moveTo(s.x, 15); // Top vänster hörn
-            ctx.lineTo(s.x + signW - tipLen, 15); // Top vänster om spets
-            ctx.lineTo(s.x + signW, 15 + signH/2); // Spetsen
-            ctx.lineTo(s.x + signW - tipLen, 15 + signH); // Botten vänster om spets
-            ctx.lineTo(s.x, 15 + signH); // Botten vänster hörn
-            ctx.closePath();
-            ctx.fill();
-
-            // Bakgrund (blå)
-            ctx.fillStyle = "#0055aa";
-            ctx.beginPath();
-            ctx.moveTo(s.x + 2, 17);
-            ctx.lineTo(s.x + signW - tipLen - 2, 17);
-            ctx.lineTo(s.x + signW - 3, 15 + signH/2);
-            ctx.lineTo(s.x + signW - tipLen - 2, 15 + signH - 2);
-            ctx.lineTo(s.x + 2, 15 + signH - 2);
-            ctx.closePath();
-            ctx.fill();
-
-            // Text
-            ctx.fillStyle = "white";
-            ctx.fillText(s.label, s.x + (signW - tipLen)/2, 31);
+            ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(s.x, 15); ctx.lineTo(s.x + signW - tipLen, 15); ctx.lineTo(s.x + signW, 15 + signH/2); ctx.lineTo(s.x + signW - tipLen, 15 + signH); ctx.lineTo(s.x, 15 + signH); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#0055aa"; ctx.beginPath(); ctx.moveTo(s.x + 2, 17); ctx.lineTo(s.x + signW - tipLen - 2, 17); ctx.lineTo(s.x + signW - 3, 15 + signH/2); ctx.lineTo(s.x + signW - tipLen - 2, 15 + signH - 2); ctx.lineTo(s.x + 2, 15 + signH - 2); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "white"; ctx.fillText(s.label, s.x + (signW - tipLen)/2, 31);
         }
-
-        ctx.textAlign = "start"; // Återställ textalign
-
-        // Logik för att återanvända skylten när den åker ut
-        if(s.x < -signW) { 
-            s.x = 1500 + Math.random() * 1000; 
-            s.label = Math.random() > 0.5 ? "SUNDSVALL" : "Ö-VIK"; 
-            s.dir = s.label === "SUNDSVALL" ? "left" : "right"; 
-        }
+        ctx.textAlign = "start"; 
+        if(s.x < -signW) { s.x = 1500 + Math.random() * 1000; s.label = Math.random() > 0.5 ? "SUNDSVALL" : "Ö-VIK"; s.dir = s.label === "SUNDSVALL" ? "left" : "right"; }
     });
 
-    ctx.fillStyle = "#333"; 
-    ctx.fillRect(0, 50, 800, 300);
-
+    ctx.fillStyle = "#333"; ctx.fillRect(0, 50, 800, 300);
     ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
     ctx.setLineDash([40, 40]); ctx.lineDashOffset = roadOffset; 
     ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(800, 200); ctx.stroke();
@@ -368,7 +309,6 @@ function draw() {
         ctx.fillRect(p.x, p.y, p.w, p.h);
         ctx.fillStyle = p.type === 'renault' ? 'red' : 'white';
         ctx.fillRect(p.x + 2, p.y + 10, p.w - 4, 8);
-
         if (!isGameOver && car.x < p.x + p.w && car.x + car.w > p.x && car.y < p.y + p.h && car.y + car.h > p.y) {
             if (p.type === 'öl') { score += 1; baseDrunkSpeed += 0.01; }
             else if (p.type === 'genever') { score += 5; baseDrunkSpeed += 0.04; }
@@ -378,28 +318,41 @@ function draw() {
         if(p.x < -50) pickups.splice(index, 1);
     });
 
-    // Polis
-    ctx.fillStyle = "white"; 
-    ctx.fillRect(police.x, police.y, police.w, police.h);
-    ctx.fillStyle = "#003399";
-    ctx.fillRect(police.x, police.y, police.w, 8);
-    ctx.fillRect(police.x, police.y + police.h - 8, police.w, 8);
-    ctx.fillStyle = "#333";
-    ctx.fillRect(police.x + 15, police.y + 8, 10, police.h - 16);
-    ctx.fillRect(police.x + police.w - 25, police.y + 8, 8, police.h - 16);
-    ctx.save();
-    ctx.translate(police.x + police.w/2, police.y + police.h/2);
-    ctx.fillStyle = "blue"; ctx.font = "bold 12px Arial"; ctx.textAlign = "center"; ctx.fillText("POLIS", 0, 5);
-    ctx.restore();
-    ctx.fillStyle = "#888"; ctx.fillRect(police.x + 25, police.y + 5, 6, police.h - 10);
-    ctx.fillStyle = "blue"; ctx.fillRect(police.x + 25, police.y + police.h/2 - 10, 6, 20);
-    ctx.fillStyle = "#ffd700"; ctx.fillRect(police.x, police.y + 5, 5, 10); ctx.fillRect(police.x, police.y + police.h - 15, 5, 10);
+    // Rita hinder (Polis eller Buss)
+    if (police.type === 'polis') {
+        ctx.fillStyle = "white"; ctx.fillRect(police.x, police.y, police.w, police.h);
+        ctx.fillStyle = "#003399"; ctx.fillRect(police.x, police.y, police.w, 8); ctx.fillRect(police.x, police.y + police.h - 8, police.w, 8);
+        ctx.fillStyle = "#333"; ctx.fillRect(police.x + 15, police.y + 8, 10, police.h - 16); ctx.fillRect(police.x + police.w - 25, police.y + 8, 8, police.h - 16);
+        ctx.save(); ctx.translate(police.x + police.w/2, police.y + police.h/2); ctx.fillStyle = "blue"; ctx.font = "bold 12px Arial"; ctx.textAlign = "center"; ctx.fillText("POLIS", 0, 5); ctx.restore();
+        ctx.fillStyle = "#888"; ctx.fillRect(police.x + 25, police.y + 5, 6, police.h - 10);
+        ctx.fillStyle = "blue"; ctx.fillRect(police.x + 25, police.y + police.h/2 - 10, 6, 20);
+        ctx.fillStyle = "#ffd700"; ctx.fillRect(police.x, police.y + 5, 5, 10); ctx.fillRect(police.x, police.y + police.h - 15, 5, 10);
+    } else {
+        // Buss-grafik (Top-down)
+        ctx.fillStyle = "#f5f5dc"; ctx.fillRect(police.x, police.y, police.w, police.h); // Kaross
+        ctx.fillStyle = "#0055aa"; ctx.fillRect(police.x, police.y, police.w, 4); ctx.fillRect(police.x, police.y + police.h - 4, police.w, 4); // Dekorränder
+        ctx.fillStyle = "#333"; ctx.fillRect(police.x + 10, police.y + 4, 15, police.h - 8); // Framruta
+        for(let i=0; i<3; i++) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(police.x + 40 + i*40, police.y + 10, 20, police.h - 20); } // Takluckor
+        ctx.save(); ctx.translate(police.x + police.w/2, police.y + police.h/2); ctx.fillStyle = "black"; ctx.font = "bold 14px Arial"; ctx.textAlign = "center"; ctx.fillText("DIN TUR", 0, 6); ctx.restore();
+        ctx.fillStyle = "#ffd700"; ctx.fillRect(police.x, police.y + 2, 4, 10); ctx.fillRect(police.x, police.y + police.h - 12, 4, 10); // Lyktor
+    }
     
     if (!isGameOver) {
         police.x -= police.speed;
-        if(police.x < -150) { police.x = 2200; police.y = 60 + Math.random() * 230; }
+        if(police.x < -200) { 
+            police.x = 2200; 
+            police.y = 60 + Math.random() * 230; 
+            // 10% chans att bli en buss
+            if (Math.random() < 0.2) {
+                police.type = 'buss';
+                police.w = 190;
+            } else {
+                police.type = 'polis';
+                police.w = 85;
+            }
+        }
         if (car.x < police.x + police.w && car.x + car.w > police.x && car.y < police.y + police.h && car.y + car.h > police.y) {
-            deathTitle.innerText = "PANG! FRONTALKROCK!";
+            deathTitle.innerText = police.type === 'polis' ? "PANG! FRONTALKROCK!" : "BUSS-SMOCKA!";
             soundPolis.play();
             triggerCrash();
         }
@@ -416,8 +369,7 @@ function draw() {
     }
 
     // Byströms bil
-    ctx.fillStyle = "black";
-    ctx.fillRect(car.x, car.y, car.w, car.h);
+    ctx.fillStyle = "black"; ctx.fillRect(car.x, car.y, car.w, car.h);
     ctx.fillStyle = "#333"; ctx.fillRect(car.x + car.w - 27, car.y + 5, 12, car.h - 10);
     ctx.fillStyle = "white"; ctx.fillRect(car.x + car.w - 80, car.y + car.h/2 - 3, 40, 6); ctx.fillRect(car.x + car.w - 56, car.y + 10, 6, car.h - 20);
     ctx.fillStyle = "#ffd700"; ctx.fillRect(car.x + car.w - 5, car.y + 5, 5, 12); ctx.fillRect(car.x + car.w - 5, car.y + car.h - 17, 5, 12);
@@ -428,22 +380,9 @@ function draw() {
         coffin.vx *= 0.98; coffin.vy *= 0.98; coffin.angle += coffin.vx * 0.01;
         if (coffin.x < 15) coffin.x = 15; if (coffin.x > 785) coffin.x = 785;
         if (coffin.y < 15) coffin.y = 15; if (coffin.y > 385) coffin.y = 385;
-        
-        ctx.save(); 
-        ctx.translate(coffin.x, coffin.y); 
-        ctx.rotate(coffin.angle);
-        
-        // Kistans kropp (utan guldkant)
-        ctx.fillStyle = "#5D4037"; 
-        ctx.fillRect(-15, -8, 30, 16);
-        
-        // Vitt kors (Öst-Väst orientering)
-        ctx.fillStyle = "white";
-        // Långa stapeln (horisontell)
-        ctx.fillRect(-8, -1, 16, 2);
-        // Korta stapeln (vertikal)
-        ctx.fillRect(2, -4, 2, 8);
-        
+        ctx.save(); ctx.translate(coffin.x, coffin.y); ctx.rotate(coffin.angle);
+        ctx.fillStyle = "#5D4037"; ctx.fillRect(-15, -8, 30, 16);
+        ctx.fillStyle = "white"; ctx.fillRect(-8, -1, 16, 2); ctx.fillRect(2, -4, 2, 8);
         ctx.restore();
     }
     if (body.active) {
