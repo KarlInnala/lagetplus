@@ -175,7 +175,7 @@
     let score = 0;
     let countdown;
     let timeLeft = 15;
-    let isWhackable = false; // Hindrar klick i början
+    let isWhackable = false;
 
     function randomTime(min, max) {
         return Math.round(Math.random() * (max - min) + min);
@@ -184,56 +184,53 @@
     function randomHole(holesList) {
         const index = Math.floor(Math.random() * holesList.length);
         const hole = holesList[index];
-        // Kolla om hålet redan är uppe för att undvika att skicka samma hål dubbelt i intensiva faser
-        if (hole === lastHole || hole.classList.contains('up')) {
+        if (hole.classList.contains('up')) {
             return randomHole(holesList);
         }
-        lastHole = hole;
         return hole;
     }
 
+    // NY LOGIK: Varje mas-peep är nu en oberoende händelse
     function peep() {
-        // Bestäm hur många masar som ska dyka upp samtidigt (1-3 beroende på tid)
-        let numMasar = 1;
-        if (timeLeft <= 5) numMasar = 3;
-        else if (timeLeft <= 10) numMasar = 2;
+        if (timeUp) return;
 
-        for (let i = 0; i < numMasar; i++) {
-            const time = randomTime(500, 1000);
-            const hole = randomHole(holes);
-            hole.classList.add('up');
+        const hole = randomHole(holes);
+        const stayTime = randomTime(600, 1000); // Hur länge de är uppe
+        
+        hole.classList.add('up');
+        
+        let clicked = false;
+        const currentWhack = () => { clicked = true; };
+        hole.addEventListener('click', currentWhack, { once: true });
+
+        setTimeout(() => {
+            hole.classList.remove('up');
+            hole.removeEventListener('click', currentWhack);
             
-            let clicked = false;
-            const currentWhack = () => { clicked = true; };
-            hole.addEventListener('click', currentWhack, { once: true });
+            if (!clicked && !timeUp) {
+                new Audio('masen_skratt.mp3').play();
+            }
 
-            setTimeout(() => {
-                hole.classList.remove('up');
-                hole.removeEventListener('click', currentWhack);
-                if (!clicked && !timeUp) {
-                    new Audio('masen_skratt.mp3').play();
-                }
-            }, time);
-        }
-
-        // Nästa peep-omgång
-        const nextPeepTime = randomTime(600, 1200);
-        if (!timeUp) setTimeout(peep, nextPeepTime);
+            // När en mas åker ner, väntar den en stund och dyker sen upp igen
+            // Pausen blir kortare ju mindre tid som är kvar
+            let minWait = timeLeft <= 5 ? 200 : (timeLeft <= 10 ? 500 : 800);
+            let maxWait = timeLeft <= 5 ? 600 : (timeLeft <= 10 ? 1000 : 1500);
+            
+            if (!timeUp) setTimeout(peep, randomTime(minWait, maxWait));
+        }, stayTime);
     }
 
     function startCountdown() {
         startBtn.disabled = true;
-        isWhackable = false; // Masarna kan inte whackas under hånskrattet
+        isWhackable = false;
         score = 0;
         scoreBoard.innerText = "0";
         timeUp = false;
         timeLeft = 15;
         timeDisplay.innerText = timeLeft;
         
-        // 1. Masen dyker upp i alla hål
         holes.forEach(hole => hole.classList.add('up'));
 
-        // 2. Efter en sekund: spela skratt och rotera
         setTimeout(() => {
             new Audio('masen_skratt.mp3').play();
             
@@ -242,7 +239,6 @@
                 coin.classList.add(direction);
             });
 
-            // 3. Efter rotationen (ca 1 sek): ta ner dem och starta 3-2-1 timern
             setTimeout(() => {
                 holes.forEach(hole => hole.classList.remove('up'));
                 coins.forEach(coin => {
@@ -266,7 +262,7 @@
             } else {
                 clearInterval(countInterval);
                 preTimerDisplay.style.display = "none";
-                isWhackable = true; // Nu är de klickbara!
+                isWhackable = true;
                 startGame();
             }
         }, 1000);
@@ -287,7 +283,11 @@
                 }, 100);
             }
         }, 1000);
+
+        // Starta 3 oberoende loopar direkt för att få fart på spelet
         peep();
+        setTimeout(peep, 300);
+        setTimeout(peep, 600);
     }
 
     function whack(e) {
