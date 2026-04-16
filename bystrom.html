@@ -341,11 +341,19 @@ function draw() {
     }
     if(police.x < -150) police.x = 2200;
 
+// Hitta detta avsnitt i din draw-funktion (under punkt 4. Pratbubblan)
     if (quoteTimer > 0) {
-        ctx.font = "14px 'Comic Sans MS', cursive";
+        // Ändrat från Comic Sans till Arial/sans-serif för mobilkompabilitet
+        ctx.font = "bold 14px Arial, sans-serif"; 
         let textWidth = ctx.measureText(currentQuote).width;
-        ctx.fillStyle = "white"; ctx.beginPath(); ctx.roundRect(car.x, car.y - 65, textWidth + 20, 35, 12); ctx.fill();
-        ctx.fillStyle = "black"; ctx.fillText(currentQuote, car.x + 10, car.y - 42);
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.roundRect(car.x, car.y - 65, textWidth + 20, 35, 12);
+        ctx.fill();
+        
+        ctx.fillStyle = "black";
+        // Vi skriver ut texten med det nya tydliga typsnittet
+        ctx.fillText(currentQuote, car.x + 10, car.y - 42);
         quoteTimer--;
     }
 
