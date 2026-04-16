@@ -5,23 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whack-a-Mas</title>
     <link rel="stylesheet" href="menu.css">
-</head>
-<body>
-    <nav class="menu">
-        <ul>
-            <li><a href="homepage.html"><div>Hem</div></a></li>
-            <li><a href="spel.html"><div>Spel</div></a></li>
-            <li><a href="upgrade.html"><div>Upgradera</div></a></li>
-            <li><a href="omvoila.html"><div>VOILA</div></a></li>
-        </ul>
-    </nav>    
-
-<title>Whack-a-Mas | LagetPay™</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
-            background-color: #f0f2f5; /* Klassisk tech-grå */
+            background-color: #f0f2f5;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -37,8 +25,24 @@
             background: white;
             padding: 30px;
             border-radius: 20px;
-            border: 3px solid #0070ba; /* LagetPay-blå */
+            border: 3px solid #0070ba;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Countdown overlay */
+        #pre-timer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8em;
+            font-weight: bold;
+            color: #0070ba;
+            z-index: 10;
+            display: none;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+            pointer-events: none;
         }
 
         .stats {
@@ -56,7 +60,6 @@
             border: 1px solid #cce0ff;
         }
 
-        /* Spelplanen - 3x3 rutnät */
         .grid {
             display: grid;
             grid-template-columns: repeat(3, 120px);
@@ -66,37 +69,31 @@
         }
 
         .hole {
-            background-color: #b3d9ff; /* "Hålet" där myntet dyker upp */
+            background-color: #b3d9ff;
             border-radius: 50%;
             position: relative;
-            overflow: hidden; /* Döljer myntet när det är "nere" */
+            overflow: hidden;
             cursor: pointer;
             border: 2px solid #80bdff;
             transition: background-color 0.2s;
         }
         .hole:hover { background-color: #cce0ff; }
 
-        /* Själva örtugen/myntet */
         .coin {
-    width: 100%;
-    height: 100%;
-    background-image: url('masen-removebg-preview.png'); /* <-- ANVÄND DIN LOGGA HÄR */
-    
-    /* --- NYTT: De här raderna centrerar bilden och får den att täcka hålet --- */
-    background-size: cover;    /* NY: Bilden sträcks för att täcka hela hålet utan att bli ihoptryckt */
-    background-position: center; /* NY: Bildens centrum placeras i hålets centrum */
-    background-repeat: no-repeat; /* NY: Förhindrar att bilden upprepas om hålet är stort */
-    /* ------------------------------------------------------------------------ */
+            width: 100%;
+            height: 100%;
+            background-image: url('masen-removebg-preview.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: absolute;
+            bottom: -100%;
+            transition: bottom 0.1s ease-out;
+            border-radius: 50%;
+        }
 
-    position: absolute;
-    bottom: -100%; /* Startar gömd under hålet */
-    transition: bottom 0.1s ease-out; /* Hastigheten myntet dyker upp */
-    border-radius: 50%;
-}
-
-        /* Klassen som JavaScript lägger till för att visa myntet */
         .hole.up .coin {
-            bottom: 0; /* Flyttar upp myntet */
+            bottom: 0;
         }
 
         button {
@@ -114,12 +111,21 @@
         button:hover { background-color: #00568c; }
         button:active { transform: scale(0.97); }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
-
     </style>
 </head>
 <body>
 
+    <nav class="menu">
+        <ul>
+            <li><a href="homepage.html"><div>Hem</div></a></li>
+            <li><a href="spel.html"><div>Spel</div></a></li>
+            <li><a href="upgrade.html"><div>Upgradera</div></a></li>
+            <li><a href="omvoila.html"><div>VOILA</div></a></li>
+        </ul>
+    </nav>
+
     <div class="game-container">
+        <div id="pre-timer">3</div>
         <h1>Whack-a-Mas™</h1>
         <p class="subtitle">Ge donationer genom klicka på Masen!</p>
 
@@ -140,7 +146,7 @@
             <div class="hole"><div class="coin"></div></div>
         </div>
 
-        <button id="start-btn" onclick="startGame()">Starta Investeringsrunda</button>
+        <button id="start-btn" onclick="startCountdown()">Starta runda</button>
     </div>
 
     <script>
@@ -148,10 +154,7 @@
     const scoreBoard = document.getElementById('score');
     const timeDisplay = document.getElementById('time');
     const startBtn = document.getElementById('start-btn');
-    
-    // --- NYTT: Skapa ljudobjektet ---
-    const masenSound = new Audio('masen.mp3'); 
-    // -------------------------------
+    const preTimerDisplay = document.getElementById('pre-timer');
 
     let lastHole;
     let timeUp = false;
@@ -174,22 +177,54 @@
     }
 
     function peep() {
-        const time = randomTime(400, 1000);
+        const time = randomTime(500, 1200);
         const hole = randomHole(holes);
         hole.classList.add('up');
+        
+        let clicked = false;
+        
+        // Skapa en referens för att veta om vi whackat denna mas
+        const currentWhack = () => { clicked = true; };
+        hole.addEventListener('click', currentWhack, { once: true });
+
         setTimeout(() => {
             hole.classList.remove('up');
+            
+            // Om masen försvinner och ingen klickade -> Spela skratt
+            if (!clicked && !timeUp) {
+                const laughSound = new Audio('masen_skratt.mp3');
+                laughSound.play();
+            }
+            
             if (!timeUp) peep();
         }, time);
     }
 
-    function startGame() {
+    function startCountdown() {
+        startBtn.disabled = true;
         score = 0;
         scoreBoard.innerText = "0:-";
         timeUp = false;
         timeLeft = 15;
         timeDisplay.innerText = timeLeft;
-        startBtn.disabled = true;
+        
+        let count = 3;
+        preTimerDisplay.style.display = "block";
+        preTimerDisplay.innerText = count;
+
+        const countInterval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                preTimerDisplay.innerText = count;
+            } else {
+                clearInterval(countInterval);
+                preTimerDisplay.style.display = "none";
+                startGame();
+            }
+        }, 1000);
+    }
+
+    function startGame() {
         startBtn.innerText = "Investerar...";
 
         countdown = setInterval(() => {
@@ -199,34 +234,32 @@
                 clearInterval(countdown);
                 timeUp = true;
                 startBtn.disabled = false;
-                startBtn.innerText = "Starta Om (50:-)";
+                startBtn.innerText = "Starta Om";
                 
                 setTimeout(() => {
                     alert("Rundan klar! Du lyckades donera " + score + ":- till Örtugens nya padel-hall. Bra jobbat!");
-                }, 10);
+                }, 100);
             }
         }, 1000);
 
         peep();
     }
 
-function whack(e) {
-    if(!e.isTrusted) return; 
-    if (!this.classList.contains('up')) return;
+    function whack(e) {
+        if(!e.isTrusted) return; 
+        if (!this.classList.contains('up')) return;
 
-    // --- NY LOGIK FÖR POLYFONI (Ljud som går in i varandra) ---
-    // Vi skapar en kopia av ljudet precis vid klicket
-    let clickSound = new Audio('masen.mp3'); 
-    clickSound.play();
-    // -------------------------------------------------------
+        // Spela träff-ljud
+        let clickSound = new Audio('masen.mp3'); 
+        clickSound.play();
 
-    score += 10;
-    this.classList.remove('up');
-    scoreBoard.innerText = score + ":-";
-}
+        score += 10;
+        this.classList.remove('up');
+        scoreBoard.innerText = score + ":-";
+    }
 
     holes.forEach(hole => hole.addEventListener('click', whack));
-</script>
+    </script>
 
 </body>
 </html>
