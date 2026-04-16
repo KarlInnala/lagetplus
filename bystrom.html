@@ -131,7 +131,7 @@ let car = { x: 100, y: 180, w: 110, h: 45, speed: 4 };
 let roadOffset = 0;
 let drunkFactor = 0;
 let baseDrunkSpeed = 0.2; // Hur mycket det svajar normalt
-let police = { x: 2000, y: 150, w: 85, h: 45, speed: 6 }; 
+let police = { x: 2000, y: 150, w: 85, h: 45, speed: 4 }; 
 let isGameOver = false;
 let isGameStarted = false;
 
@@ -209,8 +209,8 @@ function resetGame() {
     requestAnimationFrame(draw);
 }
 
-function moveUp() { if(isGameStarted && !isGameOver) car.y -= 25; }
-function moveDown() { if(isGameStarted && !isGameOver) car.y += 25; }
+function moveUp() { if(isGameStarted && !isGameOver) car.y -= 35; }
+function moveDown() { if(isGameStarted && !isGameOver) car.y += 35; }
 
 document.getElementById('btnUp').addEventListener('touchstart', (e) => { e.preventDefault(); moveUp(); });
 document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); moveDown(); });
