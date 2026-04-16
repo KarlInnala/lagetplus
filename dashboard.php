@@ -17,7 +17,7 @@ $disk_total = round(disk_total_space("/") / 1024 / 1024 / 1024, 2);
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LagetPay Control Center</title>
+    <title>Voila Status Center</title>
     <style>
         body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; }
         .card { background: #2d2d2d; padding: 20px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #4CAF50; }
@@ -26,7 +26,7 @@ $disk_total = round(disk_total_space("/") / 1024 / 1024 / 1024, 2);
     </style>
 </head>
 <body>
-    <h1>🚀 LagetPay Server Dashboard</h1>
+    <h1>🚀 Server Dashboard</h1>
     
     <div class="card">
         <div>Processorbelastning (1 min)</div>
