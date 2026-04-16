@@ -87,6 +87,25 @@ let police = { x: 2000, y: 150, w: 85, h: 45, speed: 6 };
 let isGameOver = false;
 let isGameStarted = false;
 
+// Miljödekorationer (Minskat antal för mindre plottrighet)
+let decorations = [];
+let signs = [];
+
+function createDecor() {
+    decorations = [];
+    for(let i = 0; i < 10; i++) { // Minskat från 20 till 10
+        decorations.push({
+            x: Math.random() * 800,
+            y: Math.random() < 0.5 ? Math.random() * 35 : 365 + Math.random() * 30,
+            type: Math.random() < 0.6 ? 'flower' : 'marker',
+            color: Math.random() < 0.5 ? '#FFD700' : '#DA70D6'
+        });
+    }
+    // Skapa en initial skylt
+    signs.push({ x: 1200, label: "SUNDSVALL", dir: "left" });
+}
+createDecor();
+
 let currentQuote = "";
 let quoteTimer = 0;
 
@@ -112,10 +131,10 @@ function resetGame() {
     roadOffset = 0;
     isGameOver = false;
     overlay.style.display = "none";
+    signs = [{ x: 1200, label: "SUNDSVALL", dir: "left" }];
     requestAnimationFrame(draw);
 }
 
-// Styrning för touch
 function moveUp() { if(isGameStarted && !isGameOver) car.y -= 25; }
 function moveDown() { if(isGameStarted && !isGameOver) car.y += 25; }
 
@@ -131,6 +150,62 @@ function draw() {
     
     ctx.fillStyle = "#1e3d1e"; 
     ctx.fillRect(0, 0, 800, 400);
+    
+    // Rita blommor och markeringar i diket
+    decorations.forEach(d => {
+        d.x -= car.speed;
+        if(d.x < -20) { d.x = 820; d.y = Math.random() < 0.5 ? Math.random() * 35 : 365 + Math.random() * 30; }
+        
+        if(d.type === 'flower') {
+            ctx.fillStyle = d.color;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.fillStyle = "white";
+            ctx.fillRect(d.x, d.y - 10, 4, 15);
+            ctx.fillStyle = "black";
+            ctx.fillRect(d.x, d.y - 5, 4, 3);
+        }
+    });
+
+    // Rita vägskyltar (Svensk modell: Blå med vit kant)
+    signs.forEach((s, index) => {
+        s.x -= car.speed;
+        
+        // Rita stolpe
+        ctx.fillStyle = "#888";
+        ctx.fillRect(s.x + 40, 15, 4, 40);
+        
+        // Rita skylt-tavla
+        ctx.fillStyle = "white"; // Kant
+        ctx.fillRect(s.x, 15, 85, 25);
+        ctx.fillStyle = "#0055aa"; // Blå färg
+        ctx.fillRect(s.x + 2, 17, 81, 21);
+        
+        // Text på skylt
+        ctx.fillStyle = "white";
+        ctx.font = "bold 10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(s.label, s.x + 42, 31);
+        
+        // Pil
+        ctx.beginPath();
+        if(s.dir === "left") {
+            ctx.moveTo(s.x + 5, 27); ctx.lineTo(s.x + 12, 22); ctx.lineTo(s.x + 12, 32);
+        } else {
+            ctx.moveTo(s.x + 80, 27); ctx.lineTo(s.x + 73, 22); ctx.lineTo(s.x + 73, 32);
+        }
+        ctx.fill();
+        ctx.textAlign = "start"; // Reset alignment
+
+        if(s.x < -100) {
+            s.x = 1500 + Math.random() * 500;
+            s.label = Math.random() > 0.5 ? "SUNDSVALL" : "Ö-VIK";
+            s.dir = s.label === "SUNDSVALL" ? "left" : "right";
+        }
+    });
+
     ctx.fillStyle = "#333"; 
     ctx.fillRect(0, 50, 800, 300);
 
@@ -226,8 +301,6 @@ window.addEventListener('keydown', (e) => {
     if(e.key === "ArrowUp") moveUp(); 
     if(e.key === "ArrowDown") moveDown();
 });
-
-// Startar inte draw-loopen automatiskt längre för att spara prestanda innan start
 </script>
 </body>
 </html>
