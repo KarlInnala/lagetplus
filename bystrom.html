@@ -282,7 +282,7 @@ function draw() {
         soundSlant.play();
     }
 
-    spawnPickup();
+    spawnPickup()
     pickups.forEach((p, index) => {
         p.x -= car.speed;
         if(p.type === 'öl') ctx.fillStyle = '#8B4513';
@@ -355,16 +355,28 @@ function draw() {
         quoteTimer--;
     }
 
-    // Byströms bil (Top-down)
+    // --- Byströms bil (Top-down) Roterad 180 grader ---
     ctx.fillStyle = "black";
     ctx.fillRect(car.x, car.y, car.w, car.h);
+    
+    // Vindruta (flyttad till HÖGER sida för att visa 180 graders rotation)
     ctx.fillStyle = "#333";
-    ctx.fillRect(car.x + 20, car.y + 5, 12, car.h - 10);
+    ctx.fillRect(car.x + car.w - 27, car.y + 5, 12, car.h - 10);
+    
+    // Vita korset på taket (speglat för rotation)
     ctx.fillStyle = "white";
-    ctx.fillRect(car.x + 40, car.y + car.h/2 - 3, 40, 6); 
-    ctx.fillRect(car.x + 50, car.y + 10, 6, car.h - 20);
+    ctx.fillRect(car.x + car.w - 80, car.y + car.h/2 - 3, 40, 6); // Långa armen
+    ctx.fillRect(car.x + car.w - 56, car.y + 10, 6, car.h - 20); // Tvärbalken
+    
+    // Strålkastare (Gula - Framåt på HÖGER sida)
     ctx.fillStyle = "#ffd700";
-    ctx.fillRect(car.x + car.w - 5, car.y + 5, 5, 12); ctx.fillRect(car.x + car.w - 5, car.y + car.h - 17, 5, 12);
+    ctx.fillRect(car.x + car.w - 5, car.y + 5, 5, 12); 
+    ctx.fillRect(car.x + car.w - 5, car.y + car.h - 17, 5, 12);
+
+    // Baklyktor (Röda - Bakåt på VÄNSTER sida)
+    ctx.fillStyle = "red";
+    ctx.fillRect(car.x, car.y + 5, 5, 12);
+    ctx.fillRect(car.x, car.y + car.h - 17, 5, 12);
 
     ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(10, 10, 150, 40);
     ctx.fillStyle = "#FFD700"; ctx.font = "bold 16px Arial"; ctx.fillText("POÄNG: " + score, 20, 35);
