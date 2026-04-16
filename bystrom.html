@@ -72,6 +72,8 @@
     <div class="controls-info">Piltangenter eller touch-knappar till höger</div>
     
     <audio id="bgMusic" src="bystrom.mp3" loop></audio>
+    <audio id="soundPolis" src="bystrom_polis.mp3"></audio>
+    <audio id="soundSlant" src="bystrom_slant.mp3"></audio>
 
     <div style="position: relative; display: inline-block;">
         <canvas id="gameCanvas" width="800" height="400"></canvas>
@@ -126,6 +128,8 @@ const overlay = document.getElementById('gameOverOverlay');
 const startOverlay = document.getElementById('startOverlay');
 const deathTitle = document.getElementById('deathTitle');
 const bgMusic = document.getElementById('bgMusic');
+const soundPolis = document.getElementById('soundPolis');
+const soundSlant = document.getElementById('soundSlant');
 
 let car = { x: 100, y: 180, w: 110, h: 45, speed: 3 };
 let roadOffset = 0;
@@ -183,7 +187,8 @@ const citat = [
     "Jag går mot döden vart jag än går!",
     "Solen skiner, allt är ganska rart!",
     "Nä tro mig Halvard, i vårat yrke är detta riskfritt!",
-    "Nu är vi snart i Skuleskogen..."
+    "Är vi framme snart...",
+	"Tralalalalala..."
 ];
 
 function startGame() {
@@ -268,6 +273,7 @@ function draw() {
         document.getElementById('finalScore').innerText = "Du samlade: " + score + " poäng";
         overlay.style.display = "block";
         bgMusic.pause();
+        soundSlant.play();
     }
 
     spawnPickup();
@@ -293,21 +299,14 @@ function draw() {
     if (police.x > 1990) police.y = 60 + Math.random() * 230;
     
     // --- TOP-DOWN POLISBIL (VIT) ---
-    // Kaross
     ctx.fillStyle = "white"; 
     ctx.fillRect(police.x, police.y, police.w, police.h);
-
-    // Blå ränder på sidorna (toppen och botten av bilen i top-down)
     ctx.fillStyle = "#003399";
     ctx.fillRect(police.x, police.y, police.w, 8);
     ctx.fillRect(police.x, police.y + police.h - 8, police.w, 8);
-
-    // Vindruta och bakruta
     ctx.fillStyle = "#333";
-    ctx.fillRect(police.x + 15, police.y + 8, 10, police.h - 16); // Framruta
-    ctx.fillRect(police.x + police.w - 25, police.y + 8, 8, police.h - 16); // Bakruta
-
-    // Ordet POLIS centrerat på taket
+    ctx.fillRect(police.x + 15, police.y + 8, 10, police.h - 16);
+    ctx.fillRect(police.x + police.w - 25, police.y + 8, 8, police.h - 16);
     ctx.save();
     ctx.translate(police.x + police.w/2, police.y + police.h/2);
     ctx.fillStyle = "blue";
@@ -315,14 +314,10 @@ function draw() {
     ctx.textAlign = "center";
     ctx.fillText("POLIS", 0, 5);
     ctx.restore();
-
-    // Takbrygga med blåljus (centrerad över framrutan)
-    ctx.fillStyle = "#888"; // Bryggan
+    ctx.fillStyle = "#888";
     ctx.fillRect(police.x + 25, police.y + 5, 6, police.h - 10);
-    ctx.fillStyle = "blue"; // Ljuset
+    ctx.fillStyle = "blue";
     ctx.fillRect(police.x + 25, police.y + police.h/2 - 10, 6, 20);
-
-    // Gula framlyktor
     ctx.fillStyle = "#ffd700"; 
     ctx.fillRect(police.x, police.y + 5, 5, 10); 
     ctx.fillRect(police.x, police.y + police.h - 15, 5, 10);
@@ -334,6 +329,7 @@ function draw() {
         document.getElementById('finalScore').innerText = "Du samlade: " + score + " poäng";
         overlay.style.display = "block";
         bgMusic.pause();
+        soundPolis.play();
     }
 
     if (police.x < car.x + 500 && police.x > car.x + 300 && quoteTimer <= 0) {
@@ -341,18 +337,14 @@ function draw() {
     }
     if(police.x < -150) police.x = 2200;
 
-// Hitta detta avsnitt i din draw-funktion (under punkt 4. Pratbubblan)
     if (quoteTimer > 0) {
-        // Ändrat från Comic Sans till Arial/sans-serif för mobilkompabilitet
         ctx.font = "bold 14px Arial, sans-serif"; 
         let textWidth = ctx.measureText(currentQuote).width;
         ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.roundRect(car.x, car.y - 65, textWidth + 20, 35, 12);
         ctx.fill();
-        
         ctx.fillStyle = "black";
-        // Vi skriver ut texten med det nya tydliga typsnittet
         ctx.fillText(currentQuote, car.x + 10, car.y - 42);
         quoteTimer--;
     }
@@ -361,8 +353,8 @@ function draw() {
     ctx.fillStyle = "black";
     ctx.fillRect(car.x, car.y, car.w, car.h);
     ctx.fillStyle = "#333";
-    ctx.fillRect(car.x + 20, car.y + 5, 12, car.h - 10); // Vindruta
-    ctx.fillStyle = "white"; // Korset på taket
+    ctx.fillRect(car.x + 20, car.y + 5, 12, car.h - 10);
+    ctx.fillStyle = "white";
     ctx.fillRect(car.x + 40, car.y + car.h/2 - 3, 40, 6); 
     ctx.fillRect(car.x + 50, car.y + 10, 6, car.h - 20);
     ctx.fillStyle = "#ffd700";
