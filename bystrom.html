@@ -65,6 +65,10 @@
         .bottle-icon { width: 15px; height: 25px; border-radius: 2px; border: 1px solid white; }
         .tutorial-text h3 { margin: 0; font-size: 1em; color: #FFD700; }
         .tutorial-text p { margin: 5px 0 0; font-size: 0.85em; color: #bbb; }
+
+        /* Utvecklarläge Styling */
+        .dev-mode { width: 100%; border-top: 1px solid #444; margin-top: 10px; padding-top: 10px; display: flex; justify-content: center; gap: 20px; font-size: 0.8em; color: #00FF00; }
+        .dev-mode label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
@@ -120,6 +124,12 @@
                 <p>+15 Poäng. Gör Enar rejält plägad!</p>
             </div>
         </div>
+
+        <div class="dev-mode">
+            <span>[UTVECKLARLÄGE]:</span>
+            <label><input type="checkbox" id="noCollision"> Ingen krock</label>
+            <label><input type="checkbox" id="noSway"> Inget svaj</label>
+        </div>
     </div>
 
 <script>
@@ -131,6 +141,10 @@ const deathTitle = document.getElementById('deathTitle');
 const bgMusic = document.getElementById('bgMusic');
 const soundPolis = document.getElementById('soundPolis');
 const soundSlant = document.getElementById('soundSlant');
+
+// Dev-checkboxes
+const devNoCollision = document.getElementById('noCollision');
+const devNoSway = document.getElementById('noSway');
 
 let car = { x: 100, y: 180, w: 110, h: 45, speed: 3 };
 let roadOffset = 0;
@@ -164,6 +178,9 @@ function createDecor() {
 createDecor();
 
 function triggerCrash() {
+    // Om "Ingen krock" är i-bockad, gör ingenting
+    if (devNoCollision.checked) return;
+
     isGameOver = true;
     bgMusic.pause();
     overlay.style.display = "block";
@@ -204,7 +221,8 @@ const citat = [
     "Solen skiner, allt är ganska rart!",
     "Nä tro mig Halvard, i vårat yrke är detta riskfritt!",
     "Är vi framme snart...",
-	"Tralalalalala..."
+	"Tralalalalala...",
+	"Men Enar, ser du in't polisen?!"
 ];
 
 function startGame() {
@@ -293,12 +311,20 @@ function draw() {
     if (!isGameOver) roadOffset += car.speed;
 
     if (!isGameOver) {
-        drunkFactor += (Math.random() - 0.5) * baseDrunkSpeed;
-        drunkFactor *= 0.97; car.y += drunkFactor;
+        // Drunk sway logik (med dev-check)
+        if (!devNoSway.checked) {
+            drunkFactor += (Math.random() - 0.5) * baseDrunkSpeed;
+            drunkFactor *= 0.97; car.y += drunkFactor;
+        } else {
+            drunkFactor = 0;
+        }
+
         if(car.y < 50 || car.y > 350 - car.h) { 
-            deathTitle.innerText = "UT FÖR EN BRANT!";
-            soundSlant.play();
-            triggerCrash();
+            if (!devNoCollision.checked) {
+                deathTitle.innerText = "UT FÖR EN BRANT!";
+                soundSlant.play();
+                triggerCrash();
+            }
         }
         spawnPickup();
     }
@@ -344,9 +370,11 @@ function draw() {
             else { police.type = 'polis'; police.w = 85; }
         }
         if (car.x < police.x + police.w && car.x + car.w > police.x && car.y < police.y + police.h && car.y + car.h > police.y) {
-            deathTitle.innerText = police.type === 'polis' ? "PANG! FRONTALKROCK!" : "BUSS-SMOCKA!";
-            soundPolis.play();
-            triggerCrash();
+            if (!devNoCollision.checked) {
+                deathTitle.innerText = police.type === 'polis' ? "PANG! FRONTALKROCK!" : "BUSS-SMOCKA!";
+                soundPolis.play();
+                triggerCrash();
+            }
         }
     }
 
@@ -369,7 +397,8 @@ function draw() {
     ctx.fillStyle = "#ffd700";
     ctx.fillRect(car.x + car.w - 5, car.y + 5, 5, 12); ctx.fillRect(car.x + car.w - 5, car.y + car.h - 17, 5, 12);
     ctx.fillStyle = "red";
-    ctx.fillRect(car.x, car.y + 5, 5, 12); ctx.fillRect(car.x, car.y + car.h - 17, 5, 12);
+    ctx.fillRect(car.x, car.y + 5, 5, 12);
+    ctx.fillRect(car.x, car.y + car.h - 17, 5, 12);
 
     if (coffin.active) {
         coffin.x += coffin.vx; coffin.y += coffin.vy;
