@@ -96,6 +96,19 @@
             bottom: 0;
         }
 
+        /* NYTT: Rotation för nedräkningen */
+        .spin-left { animation: spinLeft 0.5s linear 2; }
+        .spin-right { animation: spinRight 0.5s linear 2; }
+
+        @keyframes spinLeft {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+        @keyframes spinRight {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         button {
             margin-top: 25px;
             padding: 15px 35px;
@@ -151,6 +164,7 @@
 
     <script>
     const holes = document.querySelectorAll('.hole');
+    const coins = document.querySelectorAll('.coin');
     const scoreBoard = document.getElementById('score');
     const timeDisplay = document.getElementById('time');
     const startBtn = document.getElementById('start-btn');
@@ -182,20 +196,14 @@
         hole.classList.add('up');
         
         let clicked = false;
-        
-        // Skapa en referens för att veta om vi whackat denna mas
         const currentWhack = () => { clicked = true; };
         hole.addEventListener('click', currentWhack, { once: true });
 
         setTimeout(() => {
             hole.classList.remove('up');
-            
-            // Om masen försvinner och ingen klickade -> Spela skratt
             if (!clicked && !timeUp) {
-                const laughSound = new Audio('masen_skratt.mp3');
-                laughSound.play();
+                new Audio('masen_skratt.mp3').play();
             }
-            
             if (!timeUp) peep();
         }, time);
     }
@@ -208,6 +216,31 @@
         timeLeft = 15;
         timeDisplay.innerText = timeLeft;
         
+        // 1. Masen dyker upp i alla hål
+        holes.forEach(hole => hole.classList.add('up'));
+
+        // 2. Efter en sekund: spela skratt och rotera
+        setTimeout(() => {
+            new Audio('masen_skratt.mp3').play();
+            
+            coins.forEach(coin => {
+                const direction = Math.random() > 0.5 ? 'spin-right' : 'spin-left';
+                coin.classList.add(direction);
+            });
+
+            // 3. Efter rotationen (ca 1 sek): ta ner dem och starta 3-2-1 timern
+            setTimeout(() => {
+                holes.forEach(hole => hole.classList.remove('up'));
+                coins.forEach(coin => {
+                    coin.classList.remove('spin-left', 'spin-right');
+                });
+                
+                runThreeTwoOne();
+            }, 1000);
+        }, 1000);
+    }
+
+    function runThreeTwoOne() {
         let count = 3;
         preTimerDisplay.style.display = "block";
         preTimerDisplay.innerText = count;
@@ -226,7 +259,6 @@
 
     function startGame() {
         startBtn.innerText = "Investerar...";
-
         countdown = setInterval(() => {
             timeLeft--;
             timeDisplay.innerText = timeLeft;
@@ -235,13 +267,11 @@
                 timeUp = true;
                 startBtn.disabled = false;
                 startBtn.innerText = "Starta Om";
-                
                 setTimeout(() => {
                     alert("Rundan klar! Du lyckades donera " + score + ":- till Örtugens nya padel-hall. Bra jobbat!");
                 }, 100);
             }
         }, 1000);
-
         peep();
     }
 
@@ -249,10 +279,7 @@
         if(!e.isTrusted) return; 
         if (!this.classList.contains('up')) return;
 
-        // Spela träff-ljud
-        let clickSound = new Audio('masen.mp3'); 
-        clickSound.play();
-
+        new Audio('masen.mp3').play();
         score += 10;
         this.classList.remove('up');
         scoreBoard.innerText = score + ":-";
