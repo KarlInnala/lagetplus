@@ -68,7 +68,7 @@
     </style>
 </head>
 <body>
-    <h1>BRÖDERNA BYSTRÖM</h1>
+    <h1>BRÖDERNA BYSTRÖMS BEGRAVNINGSBYRÅ-SPELET</h1>
     <div class="controls-info">Använd piltangenterna eller touch-knapparna till höger</div>
     
     <audio id="bgMusic" src="bystrom.mp3" loop></audio>
@@ -264,16 +264,83 @@ function draw() {
 
     signs.forEach((s) => {
         if (!isGameOver) s.x -= car.speed;
-        ctx.fillStyle = "#888"; ctx.fillRect(s.x + 40, 15, 4, 40);
-        ctx.fillStyle = "white"; ctx.fillRect(s.x, 15, 85, 25);
-        ctx.fillStyle = "#0055aa"; ctx.fillRect(s.x + 2, 17, 81, 21);
-        ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center";
-        ctx.fillText(s.label, s.x + 42, 31);
-        ctx.beginPath();
-        if(s.dir === "left") { ctx.moveTo(s.x + 5, 27); ctx.lineTo(s.x + 12, 22); ctx.lineTo(s.x + 12, 32); }
-        else { ctx.moveTo(s.x + 80, 27); ctx.lineTo(s.x + 73, 22); ctx.lineTo(s.x + 73, 32); }
-        ctx.fill(); ctx.textAlign = "start";
-        if(s.x < -100) { s.x = 1500 + Math.random() * 1000; s.label = Math.random() > 0.5 ? "SUNDSVALL" : "Ö-VIK"; s.dir = s.label === "SUNDSVALL" ? "left" : "right"; }
+        
+        // Skyltens dimensioner och form
+        const signW = 100;
+        const signH = 25;
+        const tipLen = 15; // Längden på pilspetsen
+        
+        ctx.fillStyle = "#888"; // Stolpe
+        ctx.fillRect(s.x + signW/2 - 2, 15, 4, 40); 
+
+        ctx.font = "bold 10px Arial";
+        ctx.textAlign = "center";
+        
+        if (s.dir === "left") {
+            // Skapa pilformad skylt åt vänster (Sundsvall)
+            // Kant (vit)
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.moveTo(s.x + tipLen, 15); // Top höger om spets
+            ctx.lineTo(s.x + signW, 15); // Top höger hörn
+            ctx.lineTo(s.x + signW, 15 + signH); // Botten höger hörn
+            ctx.lineTo(s.x + tipLen, 15 + signH); // Botten höger om spets
+            ctx.lineTo(s.x, 15 + signH/2); // Spetsen
+            ctx.closePath();
+            ctx.fill();
+
+            // Bakgrund (blå)
+            ctx.fillStyle = "#0055aa";
+            ctx.beginPath();
+            ctx.moveTo(s.x + tipLen + 2, 17);
+            ctx.lineTo(s.x + signW - 2, 17);
+            ctx.lineTo(s.x + signW - 2, 15 + signH - 2);
+            ctx.lineTo(s.x + tipLen + 2, 15 + signH - 2);
+            ctx.lineTo(s.x + 3, 15 + signH/2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Text
+            ctx.fillStyle = "white";
+            ctx.fillText(s.label, s.x + (signW + tipLen)/2, 31);
+
+        } else {
+            // Skapa pilformad skylt åt höger (Ö-vik)
+            // Kant (vit)
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.moveTo(s.x, 15); // Top vänster hörn
+            ctx.lineTo(s.x + signW - tipLen, 15); // Top vänster om spets
+            ctx.lineTo(s.x + signW, 15 + signH/2); // Spetsen
+            ctx.lineTo(s.x + signW - tipLen, 15 + signH); // Botten vänster om spets
+            ctx.lineTo(s.x, 15 + signH); // Botten vänster hörn
+            ctx.closePath();
+            ctx.fill();
+
+            // Bakgrund (blå)
+            ctx.fillStyle = "#0055aa";
+            ctx.beginPath();
+            ctx.moveTo(s.x + 2, 17);
+            ctx.lineTo(s.x + signW - tipLen - 2, 17);
+            ctx.lineTo(s.x + signW - 3, 15 + signH/2);
+            ctx.lineTo(s.x + signW - tipLen - 2, 15 + signH - 2);
+            ctx.lineTo(s.x + 2, 15 + signH - 2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Text
+            ctx.fillStyle = "white";
+            ctx.fillText(s.label, s.x + (signW - tipLen)/2, 31);
+        }
+
+        ctx.textAlign = "start"; // Återställ textalign
+
+        // Logik för att återanvända skylten när den åker ut
+        if(s.x < -signW) { 
+            s.x = 1500 + Math.random() * 1000; 
+            s.label = Math.random() > 0.5 ? "SUNDSVALL" : "Ö-VIK"; 
+            s.dir = s.label === "SUNDSVALL" ? "left" : "right"; 
+        }
     });
 
     ctx.fillStyle = "#333"; 
