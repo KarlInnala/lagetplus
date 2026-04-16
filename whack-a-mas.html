@@ -30,7 +30,6 @@
             position: relative;
         }
 
-        /* Countdown overlay */
         #pre-timer {
             position: absolute;
             top: 50%;
@@ -88,7 +87,7 @@
             background-repeat: no-repeat;
             position: absolute;
             bottom: -100%;
-            transition: bottom 0.1s ease-out;
+            transition: bottom 0.08s ease-out; /* Ännu snabbare upphopp */
             border-radius: 50%;
         }
 
@@ -96,7 +95,6 @@
             bottom: 0;
         }
 
-        /* Rotation för nedräkningen */
         .spin-left { animation: spinLeft 0.5s linear 2; }
         .spin-right { animation: spinRight 0.5s linear 2; }
 
@@ -190,12 +188,15 @@
         return hole;
     }
 
-    // NY LOGIK: Varje mas-peep är nu en oberoende händelse
     function peep() {
         if (timeUp) return;
 
         const hole = randomHole(holes);
-        const stayTime = randomTime(600, 1000); // Hur länge de är uppe
+        
+        // HASTIGHET: Masarna är uppe kortare tid ju längre spelet går
+        let stayMin = timeLeft <= 5 ? 350 : (timeLeft <= 10 ? 450 : 550);
+        let stayMax = timeLeft <= 5 ? 600 : (timeLeft <= 10 ? 800 : 1000);
+        const stayTime = randomTime(stayMin, stayMax);
         
         hole.classList.add('up');
         
@@ -211,10 +212,9 @@
                 new Audio('masen_skratt.mp3').play();
             }
 
-            // När en mas åker ner, väntar den en stund och dyker sen upp igen
-            // Pausen blir kortare ju mindre tid som är kvar
-            let minWait = timeLeft <= 5 ? 200 : (timeLeft <= 10 ? 500 : 800);
-            let maxWait = timeLeft <= 5 ? 600 : (timeLeft <= 10 ? 1000 : 1500);
+            // TEMPO: Kortare väntetid mellan hoppen mot slutet
+            let minWait = timeLeft <= 5 ? 100 : (timeLeft <= 10 ? 300 : 500);
+            let maxWait = timeLeft <= 5 ? 400 : (timeLeft <= 10 ? 700 : 1200);
             
             if (!timeUp) setTimeout(peep, randomTime(minWait, maxWait));
         }, stayTime);
@@ -284,9 +284,10 @@
             }
         }, 1000);
 
-        // Starta 3 oberoende loopar direkt för att få fart på spelet
+        // INTENSITET: Startar 4 oberoende loopar (istället för 3) för högre tempo direkt
         peep();
-        setTimeout(peep, 300);
+        setTimeout(peep, 200);
+        setTimeout(peep, 400);
         setTimeout(peep, 600);
     }
 
