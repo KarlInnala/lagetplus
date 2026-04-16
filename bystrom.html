@@ -2,36 +2,68 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Bröderna Byströms Begravningsbyrå - Skuleskogen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bröderna Byströms Begravningsbyrå</title>
     <style>
-        body { background: #1a1a1a; color: #ddd; text-align: center; font-family: 'Verdana', sans-serif; overflow: hidden; }
-        canvas { border: 5px solid #444; background: #333; box-shadow: 0 0 25px rgba(0,0,0,0.7); }
-        h1 { margin-bottom: 5px; color: #f0f0f0; letter-spacing: 2px; }
-        .controls { color: #888; font-size: 0.9em; margin-bottom: 15px; }
-        .status-bar { margin-top: 10px; font-style: italic; color: #4CAF50; }
+        body { background: #1a1a1a; color: #ddd; text-align: center; font-family: 'Verdana', sans-serif; overflow: hidden; margin: 0; padding: 0; touch-action: manipulation; }
+        canvas { border: 5px solid #444; background: #333; box-shadow: 0 0 25px rgba(0,0,0,0.7); max-width: 100%; height: auto; }
+        h1 { margin-top: 10px; margin-bottom: 5px; color: #f0f0f0; letter-spacing: 2px; font-size: 1.5em; }
+        .controls-info { color: #888; font-size: 0.8em; margin-bottom: 5px; }
+        
+        /* Mobilknappar */
+        .mobile-controls {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 20;
+        }
+        .touch-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2em;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .touch-btn:active { background: rgba(255, 255, 255, 0.5); }
+
         #gameOverOverlay { 
             display: none; position: absolute; top: 50%; left: 50%; 
             transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); 
             padding: 40px; border: 3px solid red; color: white; border-radius: 15px;
-            z-index: 10;
+            z-index: 30;
         }
-        button { padding: 10px 20px; font-size: 1em; cursor: pointer; background: #4CAF50; border: none; color: white; border-radius: 5px; margin-top: 15px;}
+        button.retry-btn { padding: 10px 20px; font-size: 1em; cursor: pointer; background: #4CAF50; border: none; color: white; border-radius: 5px; margin-top: 15px;}
     </style>
 </head>
 <body>
-    <h1>⚰️ BRÖDERNA BYSTRÖM BEGRAVNINGSBYRÅ</h1>
-    <div class="controls">Håll dig på vägen! Kör du i diket eller krockar med mötande polis är det kört.</div>
+    <h1>BRÖDERNA BYSTRÖM</h1>
+    <div class="controls-info">Piltangenter eller touch-knappar till höger</div>
     
     <div style="position: relative; display: inline-block;">
         <canvas id="gameCanvas" width="800" height="400"></canvas>
+        
+        <div class="mobile-controls">
+            <div class="touch-btn" id="btnUp">▲</div>
+            <div class="touch-btn" id="btnDown">▼</div>
+        </div>
+
         <div id="gameOverOverlay">
             <h2 id="deathTitle" style="color: red;">DIKET NÄSTA!</h2>
             <p id="deathMessage">"Det var visst in't helt riskfritt att köre full..."</p>
-            <button onclick="resetGame()">Försök igen</button>
+            <button class="retry-btn" onclick="resetGame()">Försök igen</button>
         </div>
     </div>
-    
-    <div class="status-bar" id="status">Status: Mot Örnsköldsvik</div>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -39,7 +71,6 @@ const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('gameOverOverlay');
 const deathTitle = document.getElementById('deathTitle');
 
-// Fordonsinställningar
 let car = { x: 100, y: 180, w: 110, h: 45, speed: 4 };
 let roadOffset = 0;
 let drunkFactor = 0;
@@ -54,7 +85,6 @@ const citat = [
     "Tror du polisen stoppar en likbil på ljusan dan?",
     "Jag går mot döden vart jag än går!",
     "Solen skiner, allt är ganska rart!",
-    "Nä tro mig Halvard, i vårat yrke är detta riskfritt!",
     "Nu är vi snart i Skuleskogen..."
 ];
 
@@ -68,19 +98,26 @@ function resetGame() {
     requestAnimationFrame(draw);
 }
 
+// Styrning för touch
+function moveUp() { if(!isGameOver) car.y -= 25; }
+function moveDown() { if(!isGameOver) car.y += 25; }
+
+document.getElementById('btnUp').addEventListener('touchstart', (e) => { e.preventDefault(); moveUp(); });
+document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); moveDown(); });
+// Support för klick på skärmen (om man har mus men vill klicka på knapparna)
+document.getElementById('btnUp').addEventListener('mousedown', moveUp);
+document.getElementById('btnDown').addEventListener('mousedown', moveDown);
+
 function draw() {
     if (isGameOver) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 1. Vägen (Asfalt: från 50 till 350 px höjd)
-    ctx.fillStyle = "#1e3d1e"; // Gräs/Dike överst
+    ctx.fillStyle = "#1e3d1e"; 
     ctx.fillRect(0, 0, 800, 400);
-    
-    ctx.fillStyle = "#333"; // Vägbana
+    ctx.fillStyle = "#333"; 
     ctx.fillRect(0, 50, 800, 300);
 
-    // Vita mittlinjer (Omvända)
     ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
     ctx.setLineDash([40, 40]);
     ctx.lineDashOffset = roadOffset; 
@@ -91,25 +128,20 @@ function draw() {
     ctx.stroke();
     roadOffset += car.speed;
 
-    // 2. Enars fylleryck (Drunken Sway)
     drunkFactor += (Math.random() - 0.5) * 0.45;
     drunkFactor *= 0.97; 
     car.y += drunkFactor;
 
-    // DIKES-KOLLISION (Game Over utanför asfalten)
     if(car.y < 50 || car.y > 350 - car.h) { 
         isGameOver = true;
         deathTitle.innerText = "UT FÖR EN BRANT!";
         overlay.style.display = "block";
     }
 
-    // 3. Polisen (MÖTANDE TRAFIK)
     if (police.x > 1990) police.y = 60 + Math.random() * 230;
 
-    // Rita mötande polisbil
     ctx.fillStyle = "#003399";
     ctx.fillRect(police.x, police.y, police.w, police.h);
-    
     ctx.fillStyle = "white";
     ctx.font = "bold 12px sans-serif";
     ctx.fillText("POLIS", police.x + 10, police.y + 25);
@@ -125,7 +157,6 @@ function draw() {
 
     police.x -= police.speed;
 
-    // KROCK-KOLLISION med polisen
     if (car.x < police.x + police.w &&
         car.x + car.w > police.x &&
         car.y < police.y + police.h &&
@@ -135,7 +166,6 @@ function draw() {
         overlay.style.display = "block";
     }
 
-    // Pratbubbla-trigger
     if (police.x < car.x + 500 && police.x > car.x + 300 && quoteTimer <= 0) {
         currentQuote = citat[Math.floor(Math.random() * citat.length)];
         quoteTimer = 180; 
@@ -143,7 +173,6 @@ function draw() {
 
     if(police.x < -150) police.x = 2200;
 
-    // 4. Pratbubblan
     if (quoteTimer > 0) {
         ctx.font = "14px 'Comic Sans MS', cursive";
         let textWidth = ctx.measureText(currentQuote).width;
@@ -156,30 +185,19 @@ function draw() {
         quoteTimer--;
     }
 
-    // 5. Bilen (Byströms Pontiac - Svart Likbil)
     ctx.fillStyle = "black";
     ctx.fillRect(car.x, car.y, car.w, car.h);
-    
-    // Detaljer
     ctx.fillStyle = "#333";
-    ctx.fillRect(car.x + 10, car.y + 5, 60, 35); // Bakre tak
+    ctx.fillRect(car.x + 10, car.y + 5, 60, 35); 
     ctx.fillStyle = "#add8e6";
-    ctx.fillRect(car.x + 80, car.y + 5, 25, 35); // Framruta
+    ctx.fillRect(car.x + 80, car.y + 5, 25, 35); 
     ctx.fillStyle = "silver";
-    ctx.fillRect(car.x, car.y + car.h - 5, car.w, 5); // Silver-list
+    ctx.fillRect(car.x, car.y + car.h - 5, car.w, 5); 
 
-    // --- JUSTERAT VITT KORS (LIGGANDE) ---
-    // Vi vrider det 90 grader medurs så det ligger längs med taket
     ctx.fillStyle = "white";
-    // Horisontell stapel (Nu den långa delen)
-    //ctx.fillRect(car.x + 15, car.y + 19, 30, 7); 
-	    ctx.fillRect(car.x + 15, car.y + 19, 37, 7); 
-
-    // Vertikal tvärbalk (Nu den korta delen, närmare fronten)
+    ctx.fillRect(car.x + 15, car.y + 19, 37, 7); 
     ctx.fillRect(car.x + 35, car.y + 8, 7, 30);
-    // ---------------------------
 
-    // Gula lyktor
     ctx.fillStyle = "#ffd700";
     ctx.fillRect(car.x + car.w - 5, car.y + 5, 5, 12);
     ctx.fillRect(car.x + car.w - 5, car.y + 28, 5, 12);
@@ -189,8 +207,8 @@ function draw() {
 
 window.addEventListener('keydown', (e) => {
     if(isGameOver) return;
-    if(e.key === "ArrowUp") car.y -= 20; 
-    if(e.key === "ArrowDown") car.y += 20;
+    if(e.key === "ArrowUp") moveUp(); 
+    if(e.key === "ArrowDown") moveDown();
 });
 
 draw();
