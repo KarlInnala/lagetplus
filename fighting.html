@@ -3,69 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Masen vs Skvadern - Mobile Edition</title>
+    <title>Masen vs Skvadern - Mobile Pro Edition</title>
     <style>
-        body { 
-            margin: 0; 
-            background-color: #1a1a1a; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            font-family: 'Segoe UI', sans-serif; 
-            overflow: hidden; 
-            color: white;
-            touch-action: none; /* Förhindrar zoom/scroll vid spel */
-        }
-        
-        #game-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
-        canvas { border: 4px solid #444; background: #000; display: block; max-width: 100vw; max-height: 80vh; }
+        body { margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; touch-action: none; }
+        #game-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); user-select: none; -webkit-user-select: none; }
+        canvas { border: 4px solid #444; background: #000; display: block; max-width: 100vw; max-height: 70vh; }
 
         /* UI och Healthbars */
         #ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; z-index: 5; display: none; }
-        .health-container { width: 300px; height: 20px; background: rgba(0,0,0,0.5); border: 2px solid #fff; border-radius: 5px; overflow: hidden; }
+        .health-container { width: 30vw; max-width: 300px; height: 20px; background: rgba(0,0,0,0.5); border: 2px solid #fff; border-radius: 5px; overflow: hidden; position: relative; }
         .health-bar { height: 100%; width: 100%; transition: width 0.2s, background-color 0.3s; background-color: #00ff00; }
-        .name-label { position: absolute; top: -20px; font-weight: bold; text-shadow: 2px 2px 4px #000; text-transform: uppercase; font-size: 14px; }
+        .name-label { position: absolute; top: -20px; font-weight: bold; text-shadow: 2px 2px 4px #000; text-transform: uppercase; font-size: 12px; }
 
-        /* Touch-knappar */
-        .touch-panel {
-            position: absolute;
-            bottom: 20px;
-            display: none; /* Visas via JS om spel startar */
-            gap: 15px;
-            z-index: 20;
-            user-select: none;
-        }
-        #movement-controls { right: 20px; }
-        #attack-controls { left: 20px; }
-
-        .t-btn {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 24px;
-            color: white;
-        }
-        .t-btn:active { background: rgba(255, 255, 255, 0.5); }
-        .attack-btn { border-radius: 12px; width: 85px; font-size: 16px; background: rgba(255, 0, 0, 0.2); }
+        /* Mobilknappar */
+        .mobile-controls { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; }
+        .btn-group { display: flex; gap: 10px; pointer-events: auto; }
+        .t-btn { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 14px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .t-btn:active { background: rgba(255, 255, 255, 0.5); transform: scale(0.9); }
+        .jump-btn { margin-top: -40px; } /* Placerar hoppknappen lite högre */
 
         /* Overlays */
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
-        .selection-area { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
-        .selection-box { background: #333; padding: 10px; border: 3px solid #555; border-radius: 15px; text-align: center; width: 160px; }
-        .preview-img { width: 60px; height: 60px; background: #444; border-radius: 50%; margin: 5px auto; overflow: hidden; border: 2px solid #555; }
-        .preview-img img { width: 80%; }
-        
-        .sub-selection { background: #222; padding: 5px; border-radius: 8px; margin-top: 5px; }
-        .kit-btn { background: #444; border: 1px solid #666; color: white; padding: 5px; cursor: pointer; border-radius: 4px; font-size: 10px; width: 100%; }
-        .nav-btn { background: #555; border: none; color: white; padding: 5px 10px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .selection-area { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+        .selection-box { background: #333; padding: 10px; border: 3px solid #555; border-radius: 15px; text-align: center; width: 150px; }
+        .preview-img { width: 60px; height: 60px; background: #444; border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #555; }
+        .preview-img img { width: 80%; height: auto; }
+        .nav-btn { background: #555; border: none; color: white; padding: 5px 10px; cursor: pointer; border-radius: 5px; }
+
         button.action-btn { padding: 12px 40px; font-size: 18px; font-weight: bold; color: white; background: #0070ba; border: none; border-radius: 10px; cursor: pointer; }
         #gameOverOverlay { display: none; }
     </style>
@@ -75,29 +39,31 @@
 <div id="game-container">
     <div id="ui">
         <div style="position: relative;">
-            <div id="p1Name" class="name-label" style="left: 0;">P1</div>
+            <div id="p1Name" class="name-label">MASEN</div>
             <div class="health-container"><div id="p1Bar" class="health-bar"></div></div>
         </div>
         <div style="position: relative;">
-            <div id="p2Name" class="name-label" style="right: 0;">P2</div>
+            <div id="p2Name" class="name-label" style="right: 0;">SKVADERN</div>
             <div class="health-container"><div id="p2Bar" class="health-bar"></div></div>
         </div>
     </div>
 
     <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-    <div id="attack-controls" class="touch-panel">
-        <div class="t-btn attack-btn" id="t-kick">SPARK</div>
-        <div class="t-btn attack-btn" id="t-punch">SLAG</div>
-    </div>
-    <div id="movement-controls" class="touch-panel">
-        <div class="t-btn" id="t-left">◀</div>
-        <div class="t-btn" id="t-up">▲</div>
-        <div class="t-btn" id="t-right">▶</div>
+    <div class="mobile-controls" id="mobileUI" style="display: none; pointer-events: none;">
+        <div class="btn-group" style="pointer-events: auto;">
+            <div class="t-btn" id="t-kick">SPARK</div>
+            <div class="t-btn" id="t-punch">SLAG</div>
+        </div>
+        <div class="btn-group" style="pointer-events: auto;">
+            <div class="t-btn" id="t-left">VÄNST</div>
+            <div class="t-btn jump-btn" id="t-up">HOPP</div>
+            <div class="t-btn" id="t-right">HÖGER</div>
+        </div>
     </div>
 
     <div id="startOverlay" class="overlay">
-        <h2>KARAKTÄRSVAL</h2>
+        <h2 style="margin-bottom: 20px;">VÄLJ DINA INSTÄLLNINGAR</h2>
         <div class="selection-area">
             <div class="selection-box" style="border-color: #0070ba;">
                 <div class="preview-img"><img id="p1Preview" src="" alt=""></div>
@@ -106,7 +72,8 @@
                     <b id="p1CharName" style="font-size: 12px;">NAMN</b>
                     <button class="nav-btn" onclick="changeChar('p1', 1)">&gt;</button>
                 </div>
-                <div class="sub-selection"><button id="p1KitBtn" class="kit-btn" onclick="toggleKit('p1')">HEMMA</button></div>
+                <button id="p1KitBtn" class="kit-btn" style="width:100%; margin-top:5px;" onclick="toggleKit('p1')">HEMMA</button>
+                <div id="p1Stats" class="stats-container" style="font-size: 10px; text-align: left;"></div>
             </div>
             <div class="selection-box" style="border-color: #ff4444;">
                 <div class="preview-img"><img id="p2Preview" src="" alt=""></div>
@@ -115,14 +82,14 @@
                     <b id="p2CharName" style="font-size: 12px;">NAMN</b>
                     <button class="nav-btn" onclick="changeChar('p2', 1)">&gt;</button>
                 </div>
-                <div class="sub-selection"><button id="p2KitBtn" class="kit-btn" onclick="toggleKit('p2')">HEMMA</button></div>
+                <button id="p2KitBtn" class="kit-btn" style="width:100%; margin-top:5px;" onclick="toggleKit('p2')">HEMMA</button>
+                <div id="p2Stats" class="stats-container" style="font-size: 10px; text-align: left;"></div>
             </div>
         </div>
-        <div style="background:#222; padding:10px; border-radius:10px; width:300px; text-align:center; margin-bottom:15px;">
-            <div style="font-size: 12px; margin-bottom: 5px;">ARENA</div>
+        <div style="background:#222; padding:10px; border-radius:10px; width:330px; text-align:center; margin-bottom:20px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <button class="nav-btn" onclick="changeArena(-1)">&lt;</button>
-                <b id="arenaName" style="font-size: 14px; color: #ffd700;">BUNKERN</b>
+                <b id="arenaName" style="font-size: 14px; color: #ffd700;">ARENA</b>
                 <button class="nav-btn" onclick="changeArena(1)">&gt;</button>
             </div>
         </div>
@@ -130,8 +97,8 @@
     </div>
 
     <div id="gameOverOverlay" class="overlay">
-        <h1 id="winMessage"></h1>
-        <div style="display:flex; gap:20px;">
+        <h1 id="winMessage" style="font-size: 30px; margin-bottom: 30px;"></h1>
+        <div style="display:flex; gap:10px;">
             <button class="action-btn" onclick="initGame()">REVANSCH</button>
             <button class="action-btn" style="background:#555;" onclick="backToMenu()">MENY</button>
         </div>
@@ -141,7 +108,8 @@
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const p1Bar = document.getElementById('p1Bar'), p2Bar = document.getElementById('p2Bar');
+const p1Bar = document.getElementById('p1Bar');
+const p2Bar = document.getElementById('p2Bar');
 
 const fighters = [
     { name: "Masen", file: "masen-removebg-preview.png", styrka: 5, snabbhet: 2, smidighet: 3, kits: { home: { shirt: "#0070ba", pants: "#222" }, away: { shirt: "#fff", pants: "#0070ba" } } },
@@ -156,149 +124,177 @@ const arenas = [
     { name: "Hägglunds Arena", file: "hagglunds.jpg" }
 ];
 
-let p1Idx = 0, p2Idx = 1, arenaIdx = 0, p1Kit = 'home', p2Kit = 'home', gameActive = false;
-const gravity = 0.8, groundY = canvas.height - 30, keysPressed = {}, keys = { left: false, right: false, up: false, a: false, s: false };
-
+let p1Idx = 0, p2Idx = 1, arenaIdx = 0, p1Kit = 'home', p2Kit = 'home';
 fighters.forEach(f => { f.img = new Image(); f.img.src = f.file; });
 arenas.forEach(a => { if(a.file) { a.img = new Image(); a.img.src = a.file; } });
 
-const soundSlag = new Audio('slag.mp3'), soundBell = new Audio('boxingbell.mp3');
+const soundSlag = new Audio('slag.mp3');
+const soundBell = new Audio('boxingbell.mp3');
 
-// --- TOUCH HANDLING ---
+let gameActive = false, gravity = 0.8, groundY = canvas.height - 30;
+let player, enemy;
+const keys = { left: false, right: false, up: false, a: false, s: false };
+const keysPressed = {};
+
+// TOUCH LOGIK
 function bindTouch(id, key) {
     const btn = document.getElementById(id);
-    btn.addEventListener('touchstart', (e) => { 
-        e.preventDefault();
-        if(key === 'a' || key === 's') { if(!keysPressed[key]) { keys[key] = true; keysPressed[key] = true; } }
-        else { keys[key] = true; }
-    });
-    btn.addEventListener('touchend', (e) => { 
-        e.preventDefault();
-        keys[key] = false; 
-        keysPressed[key] = false;
-    });
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; if(key === 'a' || key === 's') keysPressed[key] = false; });
+    // Även för mus-test i webbläsare
+    btn.addEventListener('mousedown', () => { keys[key] = true; });
+    btn.addEventListener('mouseup', () => { keys[key] = false; if(key === 'a' || key === 's') keysPressed[key] = false; });
 }
-bindTouch('t-left', 'left'); bindTouch('t-right', 'right'); bindTouch('t-up', 'up');
-bindTouch('t-kick', 'a'); bindTouch('t-punch', 's');
-
-// --- KEYBOARD HANDLING ---
-window.addEventListener('keydown', e => {
-    const k = e.key.toLowerCase();
-    if (e.key === 'ArrowLeft') keys.left = true;
-    if (e.key === 'ArrowRight') keys.right = true;
-    if (e.key === 'ArrowUp') keys.up = true;
-    if ((k === 'a' || k === 's') && !keysPressed[k]) { keys[k] = true; keysPressed[k] = true; }
-});
-window.addEventListener('keyup', e => {
-    const k = e.key.toLowerCase();
-    if (e.key === 'ArrowLeft') keys.left = false;
-    if (e.key === 'ArrowRight') keys.right = false;
-    if (e.key === 'ArrowUp') keys.up = false;
-    if (k === 'a' || k === 's') { keys[k] = false; keysPressed[k] = false; }
-});
+bindTouch('t-left', 'left');
+bindTouch('t-right', 'right');
+bindTouch('t-up', 'up');
+bindTouch('t-kick', 'a');
+bindTouch('t-punch', 's');
 
 function toggleKit(p) {
     if(p === 'p1') p1Kit = p1Kit === 'home' ? 'away' : 'home';
     else p2Kit = p2Kit === 'home' ? 'away' : 'home';
     updateMenu();
 }
-function changeChar(p, d) {
-    if(p === 'p1') p1Idx = (p1Idx + d + fighters.length) % fighters.length;
-    else p2Idx = (p2Idx + d + fighters.length) % fighters.length;
-    updateMenu();
+
+function renderStats(targetId, fighter) {
+    const stats = [{ label: "Sty", val: fighter.styrka }, { label: "Sna", val: fighter.snabbhet }, { label: "Smi", val: fighter.smidighet }];
+    let html = '';
+    stats.forEach(s => { html += `<div style="display:flex; justify-content:space-between;"><span>${s.label}</span><div style="width:50px; height:5px; background:#111; margin-top:5px;"><div style="background:#ffd700; height:100%; width:${s.val*20}%"></div></div></div>`; });
+    document.getElementById(targetId).innerHTML = html;
 }
-function changeArena(d) { arenaIdx = (arenaIdx + d + arenas.length) % arenas.length; updateMenu(); }
 
 function updateMenu() {
     document.getElementById('p1Preview').src = fighters[p1Idx].file;
     document.getElementById('p1CharName').innerText = fighters[p1Idx].name;
     document.getElementById('p1KitBtn').innerText = p1Kit.toUpperCase();
+    renderStats('p1Stats', fighters[p1Idx]);
     document.getElementById('p2Preview').src = fighters[p2Idx].file;
     document.getElementById('p2CharName').innerText = fighters[p2Idx].name;
     document.getElementById('p2KitBtn').innerText = p2Kit.toUpperCase();
+    renderStats('p2Stats', fighters[p2Idx]);
     document.getElementById('arenaName').innerText = arenas[arenaIdx].name.toUpperCase();
 }
 
+function changeChar(p, d) {
+    if(p === 'p1') p1Idx = (p1Idx + d + fighters.length) % fighters.length;
+    else p2Idx = (p2Idx + d + fighters.length) % fighters.length;
+    updateMenu();
+}
+
+function changeArena(d) { arenaIdx = (arenaIdx + d + arenas.length) % arenas.length; updateMenu(); }
+
 function initGame() {
-    player = { x: 150, y: 0, velX: 0, velY: 0, width: 40, height: 110, health: 100, onGround: false, facingRight: true, isKicking: false, isPunching: false, attackTimer: 0, hasHit: false, name: fighters[p1Idx].name, face: fighters[p1Idx].img, isPlayer: true, walkFrame: 0, knockedOut: false, styrka: fighters[p1Idx].styrka, snabbhet: fighters[p1Idx].snabbhet, smidighet: fighters[p1Idx].smidighet, kit: fighters[p1Idx].kits[p1Kit] };
-    enemy = { x: 600, y: 0, velX: 0, velY: 0, width: 40, height: 110, health: 100, onGround: false, facingRight: false, isKicking: false, isPunching: false, attackTimer: 0, hasHit: false, name: fighters[p2Idx].name, face: fighters[p2Idx].img, isPlayer: false, walkFrame: 0, knockedOut: false, styrka: fighters[p2Idx].styrka, snabbhet: fighters[p2Idx].snabbhet, smidighet: fighters[p2Idx].smidighet, kit: fighters[p2Idx].kits[p2Kit] };
+    player = createCharacter(150, fighters[p1Idx], p1Kit, true);
+    enemy = createCharacter(600, fighters[p2Idx], p2Kit, false);
+    document.getElementById('p1Name').innerText = player.name;
+    document.getElementById('p2Name').innerText = enemy.name;
+    updateBars();
     gameActive = true;
     document.getElementById('startOverlay').style.display = 'none';
     document.getElementById('gameOverOverlay').style.display = 'none';
     document.getElementById('ui').style.display = 'flex';
-    document.getElementById('movement-controls').style.display = 'flex';
-    document.getElementById('attack-controls').style.display = 'flex';
+    document.getElementById('mobileUI').style.display = 'flex';
+}
+
+function createCharacter(x, data, kitType, isPlayer) {
+    return { x: x, y: 0, velX: 0, velY: 0, width: 40, height: 110, health: 100, onGround: false, facingRight: isPlayer, isKicking: false, isPunching: false, attackTimer: 0, hasHit: false, name: data.name, face: data.img, isPlayer: isPlayer, walkFrame: 0, knockedOut: false, styrka: data.styrka, snabbhet: data.snabbhet, smidighet: data.smidighet, kit: data.kits[kitType] };
 }
 
 function backToMenu() {
     document.getElementById('gameOverOverlay').style.display = 'none';
     document.getElementById('startOverlay').style.display = 'flex';
     document.getElementById('ui').style.display = 'none';
-    document.getElementById('movement-controls').style.display = 'none';
-    document.getElementById('attack-controls').style.display = 'none';
+    document.getElementById('mobileUI').style.display = 'none';
     gameActive = false;
 }
 
-function checkCollision(a, d, r) {
-    if (a.hasHit || d.knockedOut) return;
-    const dist = Math.abs((a.x + a.width/2) - (d.x + d.width/2));
-    if (dist < r && Math.abs(a.y - d.y) < 60) {
-        d.health -= (a.isKicking ? 3.5 : 2) * a.styrka;
+function checkCollision(attacker, defender, range) {
+    if (attacker.hasHit || defender.knockedOut) return;
+    const dist = Math.abs((attacker.x + attacker.width/2) - (defender.x + defender.width/2));
+    if (dist < range && Math.abs(attacker.y - defender.y) < 60) {
+        defender.health -= (attacker.isKicking ? 3.5 : 2) * attacker.styrka;
         soundSlag.currentTime = 0; soundSlag.play();
-        const kF = a.isKicking ? 15 + a.styrka : 10 + a.styrka;
-        d.velX = a.facingRight ? kF : -kF;
-        a.hasHit = true;
+        const kForce = attacker.isKicking ? 15 + attacker.styrka : 10 + attacker.styrka;
+        defender.velX = attacker.facingRight ? kForce : -kForce;
+        attacker.hasHit = true; updateBars();
     }
 }
 
-function updateChar(c, t = null) {
-    if (c.knockedOut) {
-        c.velX *= 0.9; c.x += c.velX;
-        if (c.y + c.height > groundY) { c.y = groundY - c.height; c.velY = 0; }
-        else { c.velY += gravity; c.y += c.velY; }
+function updateBars() {
+    if (!player || !enemy) return;
+    p1Bar.style.width = Math.max(0, player.health) + "%";
+    p2Bar.style.width = Math.max(0, enemy.health) + "%";
+}
+
+function updateChar(char, target = null) {
+    if (char.knockedOut) {
+        char.velX *= 0.9; char.x += char.velX;
+        if (char.y + char.height > groundY) { char.y = groundY - char.height; char.velY = 0; }
+        else { char.velY += gravity; char.y += char.velY; }
         return;
     }
     if (!gameActive) return;
-    const mS = 3.5 + (c.snabbhet * 1.1), jP = 12 + (c.snabbhet * 0.8);
-    if (!c.isPlayer && t) {
-        const d = c.x - t.x;
-        if (Math.abs(d) > 60) { c.velX = d > 0 ? -mS : mS; c.facingRight = d < 0; }
-        else { c.velX *= 0.5; if (c.attackTimer === 0 && Math.random() < 0.03 + (c.smidighet * 0.015)) { if(Math.random() > 0.8) c.isKicking = true; else c.isPunching = true; c.attackTimer = Math.max(8, 25 - c.smidighet*4); c.hasHit = false; } }
-    } else if (c.isPlayer) {
-        c.velX *= 0.8;
-        if (keys.left) { c.velX = -mS; c.facingRight = false; }
-        if (keys.right) { c.velX = mS; c.facingRight = true; }
-        if (keys.up && c.onGround) { c.velY = -jP; c.onGround = false; }
-        if (c.attackTimer === 0) {
-            if (keys.a) { c.isKicking = true; c.attackTimer = Math.max(12, 38 - c.smidighet*5); c.hasHit = false; keys.a = false; }
-            else if (keys.s) { c.isPunching = true; c.attackTimer = Math.max(6, 26 - c.smidighet*4); c.hasHit = false; keys.s = false; }
+    const mSpd = 3.5 + (char.snabbhet * 1.1);
+    const jPwr = 12 + (char.snabbhet * 0.8);
+    if (!char.isPlayer && target) {
+        const d = char.x - target.x;
+        if (Math.abs(d) > 60) { char.velX = d > 0 ? -mSpd : mSpd; char.facingRight = d < 0; }
+        else {
+            char.velX *= 0.5;
+            if (char.attackTimer === 0) {
+                if (Math.random() < 0.03 + (char.smidighet * 0.015)) { 
+                    if(Math.random() > 0.8) char.isKicking = true; else char.isPunching = true;
+                    char.attackTimer = Math.max(8, 25 - char.smidighet*4); char.hasHit = false; 
+                }
+            }
+        }
+    } else if (char.isPlayer) {
+        char.velX *= 0.8;
+        if (keys.left) { char.velX = -mSpd; char.facingRight = false; }
+        if (keys.right) { char.velX = mSpd; char.facingRight = true; }
+        if (keys.up && char.onGround) { char.velY = -jPwr; char.onGround = false; }
+        if (char.attackTimer === 0) {
+            if (keys.a && !keysPressed.a) { char.isKicking = true; char.attackTimer = Math.max(12, 38 - char.smidighet*5); char.hasHit = false; keysPressed.a = true; }
+            else if (keys.s && !keysPressed.s) { char.isPunching = true; char.attackTimer = Math.max(6, 26 - char.smidighet*4); char.hasHit = false; keysPressed.s = true; }
         }
     }
-    c.velY += gravity; c.x += c.velX; c.y += c.velY;
-    if (c.y + c.height > groundY) { c.y = groundY - c.height; c.velY = 0; c.onGround = true; }
-    if (c.x < 0) c.x = 0; if (c.x + c.width > canvas.width) c.x = canvas.width - c.width;
-    if (c.attackTimer > 0) { c.attackTimer--; if (t) checkCollision(c, t, c.isKicking ? 85 : 65); }
-    else { c.isKicking = false; c.isPunching = false; }
-    if (Math.abs(c.velX) > 0.5) c.walkFrame += 0.25;
+    char.velY += gravity; char.x += char.velX; char.y += char.velY;
+    if (char.y + char.height > groundY) { char.y = groundY - char.height; char.velY = 0; char.onGround = true; }
+    if (char.x < 0) char.x = 0; if (char.x + char.width > canvas.width) char.x = canvas.width - char.width;
+    if (char.attackTimer > 0) { char.attackTimer--; if (target) checkCollision(char, target, char.isKicking ? 85 : 65); }
+    else { char.isKicking = false; char.isPunching = false; }
+    if (Math.abs(char.velX) > 0.5) char.walkFrame += 0.25;
 }
 
-function drawStickman(c) {
+function drawStickman(char) {
     ctx.save();
-    const cx = c.x + c.width/2, fY = c.y + c.height;
-    if (c.knockedOut) { ctx.translate(cx, fY); ctx.rotate(c.facingRight ? -Math.PI / 2 : Math.PI / 2); ctx.translate(-cx, -fY); }
-    const hY = c.y + 20, hipY = c.y + 70;
+    const cx = char.x + char.width/2;
+    const footY = char.y + char.height;
+    if (char.knockedOut) { ctx.translate(cx, footY); ctx.rotate(char.facingRight ? -Math.PI / 2 : Math.PI / 2); ctx.translate(-cx, -footY); }
+    const headY = char.y + 20, hipY = char.y + 70;
     ctx.lineCap = 'round'; ctx.strokeStyle = "white"; ctx.lineWidth = 16;
-    ctx.beginPath(); ctx.moveTo(cx, hY + 10); ctx.lineTo(cx, hipY); ctx.stroke();
-    ctx.lineWidth = 12; ctx.strokeStyle = c.knockedOut ? "#555" : c.kit.pants;
-    const lM = c.knockedOut ? 0 : Math.sin(c.walkFrame) * 15;
-    [1, -1].forEach(s => { ctx.beginPath(); ctx.moveTo(cx, hipY); if (c.isKicking && c.facingRight === (s === 1)) { const r = c.facingRight ? 45 : -45; ctx.lineTo(cx + r/2, hipY - 5); ctx.lineTo(cx + r, hipY - 5); } else { const o = s * lM; ctx.lineTo(cx + o, hipY + 20); ctx.lineTo(cx + o * 1.5, fY); } ctx.stroke(); });
-    ctx.lineWidth = 22; ctx.strokeStyle = c.kit.shirt;
-    ctx.beginPath(); ctx.moveTo(cx, hY + 10); ctx.lineTo(cx, hipY); ctx.stroke();
-    ctx.lineWidth = 10; const aY = hY + 25; ctx.beginPath(); ctx.moveTo(cx, aY);
-    if (c.isPunching) { const r = c.facingRight ? 45 : -45; ctx.lineTo(cx + r, aY); }
+    ctx.beginPath(); ctx.moveTo(cx, headY + 10); ctx.lineTo(cx, hipY); ctx.stroke();
+    ctx.lineWidth = 12; ctx.strokeStyle = char.knockedOut ? "#555" : char.kit.pants;
+    const lM = char.knockedOut ? 0 : Math.sin(char.walkFrame) * 15;
+    [1, -1].forEach(s => {
+        ctx.beginPath(); ctx.moveTo(cx, hipY);
+        if (char.isKicking && char.facingRight === (s === 1)) { const r = char.facingRight ? 45 : -45; ctx.lineTo(cx + r/2, hipY - 5); ctx.lineTo(cx + r, hipY - 5); }
+        else { const o = s * lM; ctx.lineTo(cx + o, hipY + 20); ctx.lineTo(cx + o * 1.5, footY); }
+        ctx.stroke();
+    });
+    ctx.lineWidth = 22; ctx.strokeStyle = char.kit.shirt;
+    ctx.beginPath(); ctx.moveTo(cx, headY + 10); ctx.lineTo(cx, hipY); ctx.stroke();
+    ctx.lineWidth = 10; ctx.strokeStyle = char.kit.shirt;
+    const aY = headY + 25; ctx.beginPath(); ctx.moveTo(cx, aY);
+    if (char.isPunching) { const r = char.facingRight ? 45 : -45; ctx.lineTo(cx + r, aY); }
     else { ctx.lineTo(cx - 15, aY + 20); ctx.moveTo(cx, aY); ctx.lineTo(cx + 15, aY + 20); }
     ctx.stroke();
-    if (c.face.complete) { ctx.save(); ctx.beginPath(); ctx.arc(cx, hY, 32, 0, Math.PI*2); ctx.clip(); if (!c.facingRight) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); } ctx.drawImage(c.face, cx - 35, hY - 35, 70, 70); ctx.restore(); }
+    if (char.face.complete) {
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, headY, 32, 0, Math.PI*2); ctx.clip();
+        if (!char.facingRight) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); }
+        ctx.drawImage(char.face, cx - 35, headY - 35, 70, 70); ctx.restore();
+    }
     ctx.restore();
 }
 
@@ -308,20 +304,45 @@ function loop() {
     if (cA.img && cA.img.complete) ctx.drawImage(cA.img, 0, 0, canvas.width, canvas.height);
     else { ctx.fillStyle = '#333'; ctx.fillRect(0,0, canvas.width, canvas.height); }
     ctx.fillStyle = '#666'; ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY); 
-    ctx.fillStyle = '#333'; ctx.fillRect(0, groundY, canvas.width, 4);
-    if (gameActive) {
+    ctx.fillStyle = '#444'; ctx.fillRect(0, groundY, canvas.width, 4);
+    if (player && enemy) {
         updateChar(player, enemy); updateChar(enemy, player);
-        p1Bar.style.width = Math.max(0, player.health) + "%"; p2Bar.style.width = Math.max(0, enemy.health) + "%";
-        if (player.health <= 0 || enemy.health <= 0) {
+        if (gameActive && (player.health <= 0 || enemy.health <= 0)) {
             gameActive = false; soundBell.play();
             if (player.health <= 0) player.knockedOut = true; else enemy.knockedOut = true;
-            setTimeout(() => { document.getElementById('gameOverOverlay').style.display = 'flex'; document.getElementById('winMessage').innerText = `${(player.health <= 0 ? enemy.name : player.name).toUpperCase()} VANN!`; }, 1000);
+            setTimeout(() => {
+                document.getElementById('gameOverOverlay').style.display = 'flex';
+                document.getElementById('mobileUI').style.display = 'none';
+                const win = player.health <= 0 ? enemy.name : player.name;
+                document.getElementById('winMessage').innerText = `${win.toUpperCase()} VANN!`;
+                document.getElementById('winMessage').style.color = player.health <= 0 ? "red" : "#0070ba";
+            }, 1000);
         }
         drawStickman(player); drawStickman(enemy);
     }
     requestAnimationFrame(loop);
 }
-updateMenu(); loop();
+
+// Tangentbord som vanligt
+window.addEventListener('keydown', e => {
+    const key = e.key.toLowerCase();
+    if (e.key === 'ArrowLeft') keys.left = true;
+    if (e.key === 'ArrowRight') keys.right = true;
+    if (e.key === 'ArrowUp') keys.up = true;
+    if (key === 'a') keys.a = true;
+    if (key === 's') keys.s = true;
+});
+window.addEventListener('keyup', e => {
+    const key = e.key.toLowerCase();
+    if (e.key === 'ArrowLeft') keys.left = false;
+    if (e.key === 'ArrowRight') keys.right = false;
+    if (e.key === 'ArrowUp') keys.up = false;
+    if (key === 'a') { keys.a = false; keysPressed.a = false; }
+    if (key === 's') { keys.s = false; keysPressed.s = false; }
+});
+
+updateMenu();
+loop();
 </script>
 </body>
 </html>
