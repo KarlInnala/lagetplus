@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masen vs Skvadern - Arena Edition</title>
+    <title>Masen vs Skvadern - Hägglunds Edition</title>
     <style>
         body { margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; }
         #game-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
@@ -124,7 +124,8 @@ const fighters = [
 const arenas = [
     { name: "Bunkern", file: null },
     { name: "Gamla salen", file: "gamlasalen.jpg" },
-    { name: "Höga kustenbron", file: "hogakusten.jpg" }
+    { name: "Höga kustenbron", file: "hogakusten.jpg" },
+    { name: "Hägglunds Arena", file: "hagglunds.jpg" }
 ];
 
 let p1Idx = 0;
@@ -141,7 +142,7 @@ const soundBell = new Audio('boxingbell.mp3');
 
 let gameActive = false;
 const gravity = 0.8;
-const groundY = canvas.height - 30; // Plattformens ovankant
+const groundY = canvas.height - 30;
 const keysPressed = {};
 let player, enemy;
 const keys = { left: false, right: false, up: false, a: false, s: false };
@@ -318,7 +319,8 @@ function drawStickman(char) {
     else { ctx.lineTo(cx - 15, armY + 20); ctx.moveTo(cx, armY); ctx.lineTo(cx + 15, armY + 20); }
     ctx.stroke();
     if (char.face.complete) {
-        ctx.save(); ctx.beginPath(); ctx.arc(cx, headY, 28, 0, Math.PI*2); ctx.clip();
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, headY, 28, 0, Math.PI*2); ctx.clip();
         if (!char.facingRight) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); }
         ctx.drawImage(char.face, cx - 32, headY - 32, 64, 64); ctx.restore();
     }
@@ -333,15 +335,12 @@ function loop() {
     if (currentArena.img && currentArena.img.complete) {
         ctx.drawImage(currentArena.img, 0, 0, canvas.width, canvas.height);
     } else {
-        // Standard "Bunkern" stil
         ctx.fillStyle = '#eee'; ctx.fillRect(0,0, canvas.width, canvas.height);
     }
     
-    // 2. Rita Plattformen (Grått golv) - Detta ritas *över* bakgrundsbilden
-    ctx.fillStyle = '#666'; // Grå färg för plattformen
+    // 2. Rita Plattformen (Grått golv)
+    ctx.fillStyle = '#666'; 
     ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY); 
-    
-    // Marklinje (mörkgrå) för lite kontrast
     ctx.fillStyle = '#444'; ctx.fillRect(0, groundY, canvas.width, 4);
 
     if (player && enemy) {
