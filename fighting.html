@@ -3,359 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masen - Streckgubbe Spel</title>
+    <title>Masen vs Skvadern 2.0 - Fixed Combat</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden; /* Förhindrar scrollning när man hoppar */
-            font-family: sans-serif;
-        }
-
-        #gameContainer {
-            position: relative;
-        }
-
-        canvas {
-            border: 4px solid #333;
-            background-color: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-        }
-
-        #controlsInfo {
-            position: absolute;
-            bottom: -60px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #555;
-            font-size: 14px;
-            background: rgba(255,255,255,0.8);
-            padding: 10px 0;
-            border-radius: 0 0 10px 10px;
-        }
+        body { margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; }
+        #game-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        canvas { border: 4px solid #444; background: linear-gradient(to bottom, #eee, #fff); display: block; }
+        #ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; }
+        .health-container { width: 300px; height: 25px; background: rgba(0,0,0,0.5); border: 2px solid #fff; border-radius: 5px; overflow: hidden; position: relative; }
+        .health-bar { height: 100%; width: 100%; transition: width 0.2s, background-color 0.3s; }
+        #p1Bar, #p2Bar { background-color: #00ff00; }
+        .name-label { position: absolute; top: -20px; font-weight: bold; text-shadow: 2px 2px 4px #000; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+        #gameOverOverlay { display: none; }
+        button { padding: 15px 40px; font-size: 24px; font-weight: bold; color: white; background: #0070ba; border: none; border-radius: 10px; cursor: pointer; transition: transform 0.1s, background 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        button:hover { background: #00568c; transform: scale(1.05); }
+        button:active { transform: scale(0.95); }
+        .controls { color: #888; margin-top: 15px; font-size: 14px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="gameContainer">
+<div id="game-container">
+    <div id="ui">
+        <div style="position: relative;">
+            <div class="name-label" style="left: 0;">MASEN</div>
+            <div class="health-container"><div id="p1Bar" class="health-bar"></div></div>
+        </div>
+        <div style="position: relative;">
+            <div class="name-label" style="right: 0;">SKVADERN</div>
+            <div class="health-container"><div id="p2Bar" class="health-bar"></div></div>
+        </div>
+    </div>
+
     <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <div id="controlsInfo">
-        <strong>Kontroller:</strong> Piltangenter = Gå/Hoppa | <strong>A</strong> = Sparka | <strong>S</strong> = Boxas
+
+    <div id="startOverlay" class="overlay">
+        <h1 style="color: #0070ba; font-size: 50px; margin-bottom: 20px;">MASEN VS SKVADERN</h1>
+        <button onclick="initGame()">STARTA SPELET</button>
+        <div class="controls" style="color: white; margin-top: 30px;">
+            Piltangenter: Gå/Hoppa | <strong>A</strong>: Sparka | <strong>S</strong>: Boxas
+        </div>
+    </div>
+
+    <div id="gameOverOverlay" class="overlay">
+        <h1 id="winMessage" style="font-size: 40px; margin-bottom: 20px;"></h1>
+        <button onclick="resetGame()">SPELA IGEN</button>
     </div>
 </div>
 
 <script>
-// --- KONFIGURATION & SETUP ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const p1Bar = document.getElementById('p1Bar');
+const p2Bar = document.getElementById('p2Bar');
 
-// Ladda bilden för ansiktet
-const faceImage = new Image();
-faceImage.src = 'masen-removebg-preview.png'; // Måste ligga i samma mapp!
+const faceMasen = new Image(); faceMasen.src = 'masen-removebg-preview.png';
+const faceSkvader = new Image(); faceSkvader.src = 'skvader-removebg-preview.png';
 
-// Spelarens egenskaper
-const player = {
-    // Position och storlek
-    x: 100,
-    y: 300, // Startposition (Y mäts från toppen)
-    width: 30, // Ungefärlig bredd för kollision
-    height: 120, // Total höjd
+let gameActive = false;
+const gravity = 0.8;
+const groundY = canvas.height - 30;
 
-    // Rörelse
-    speed: 5,
-    velX: 0,
-    velY: 0,
-    gravity: 0.8,
-    jumpForce: -15,
-    onGround: false,
+// Håller koll på om tangenten är nertryckt för att förhindra spam
+const keysPressed = {};
 
-    // Grafikinställningar
-    lineWidth: 4,
-    headRadius: 25,
-    bodyLength: 50,
-    limbLength: 40,
+function createCharacter(x, color, face, isPlayer) {
+    return {
+        x: x, y: 0, velX: 0, velY: 0,
+        width: 40, height: 110,
+        health: 100,
+        onGround: false,
+        facingRight: isPlayer,
+        isKicking: false, isPunching: false, attackTimer: 0,
+        hasHit: false, // NYTT: Förhindrar flera träffar i samma attack
+        color: color, face: face,
+        isPlayer: isPlayer,
+        walkFrame: 0
+    };
+}
 
-    // Tillstånd (för animationer)
-    facingRight: true,
-    isKicking: false,
-    isPunching: false,
-    attackTimer: 0, // Hur länge attacken visas
-    walkAnimFrame: 0 // För att få benen att röra sig
-};
+let player, enemy;
+const keys = { left: false, right: false, up: false, a: false, s: false };
 
-// Tangentbordsstatus
-const keys = {
-    left: false,
-    right: false,
-    up: false,
-    a: false, // Spark
-    s: false  // Boxas
-};
-
-// --- INPUT HANTERING ---
 window.addEventListener('keydown', e => {
+    const key = e.key.toLowerCase();
     if (e.key === 'ArrowLeft') keys.left = true;
     if (e.key === 'ArrowRight') keys.right = true;
     if (e.key === 'ArrowUp') keys.up = true;
-    if (e.key.toLowerCase() === 'a') keys.a = true;
-    if (e.key.toLowerCase() === 's') keys.s = true;
+    
+    // Attacktangenter: Sätt till true bara om de inte redan hölls in
+    if (key === 'a' && !keysPressed['a']) { keys.a = true; keysPressed['a'] = true; }
+    if (key === 's' && !keysPressed['s']) { keys.s = true; keysPressed['s'] = true; }
 });
 
 window.addEventListener('keyup', e => {
+    const key = e.key.toLowerCase();
     if (e.key === 'ArrowLeft') keys.left = false;
     if (e.key === 'ArrowRight') keys.right = false;
     if (e.key === 'ArrowUp') keys.up = false;
-    // Attacker triggas bara en gång per tryck
-    if (e.key.toLowerCase() === 'a') keys.a = false;
-    if (e.key.toLowerCase() === 's') keys.s = false;
+    if (key === 'a') { keys.a = false; keysPressed['a'] = false; }
+    if (key === 's') { keys.s = false; keysPressed['s'] = false; }
 });
 
+function updateBars() {
+    p1Bar.style.width = Math.max(0, player.health) + "%";
+    p2Bar.style.width = Math.max(0, enemy.health) + "%";
+    [player, enemy].forEach((char, i) => {
+        const bar = i === 0 ? p1Bar : p2Bar;
+        if(char.health < 30) bar.style.backgroundColor = "#ff0000";
+        else if(char.health < 60) bar.style.backgroundColor = "#ffff00";
+        else bar.style.backgroundColor = "#00ff00";
+    });
+}
 
-// --- SPEL-LOGIK (UPPDATERING) ---
-function update() {
-    // 1. Horisontell rörelse
-    player.velX = 0;
-    if (keys.left) {
-        player.velX = -player.speed;
-        player.facingRight = false;
-    }
-    if (keys.right) {
-        player.velX = player.speed;
-        player.facingRight = true;
-    }
+function initGame() {
+    player = createCharacter(100, '#0070ba', faceMasen, true);
+    enemy = createCharacter(600, '#ff4444', faceSkvader, false);
+    updateBars(); 
+    gameActive = true;
+    document.getElementById('startOverlay').style.display = 'none';
+    document.getElementById('gameOverOverlay').style.display = 'none';
+}
 
-    // 2. Vertikal rörelse (Hopp och Gravitation)
-    player.velY += player.gravity; // Gravitation drar alltid neråt
+function resetGame() {
+    initGame();
+}
 
-    if (keys.up && player.onGround) {
-        player.velY = player.jumpForce;
-        player.onGround = false;
-    }
+function checkCollision(attacker, defender, range) {
+    // Om vi redan har träffat under denna attack-timer, gör inget
+    if (attacker.hasHit) return;
 
-    // Uppdatera position
-    player.x += player.velX;
-    player.y += player.velY;
-
-    // 3. Kollisionshantering (Golv och Väggar)
-    // Enkelt golv
-    const groundY = canvas.height - 20; // Marken är 20px från botten
-    if (player.y + player.height > groundY) {
-        player.y = groundY - player.height;
-        player.velY = 0;
-        player.onGround = true;
-    }
-
-    // Håll spelaren inom canvasen (vänster/höger)
-    if (player.x < 0) player.x = 0;
-    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-
-    // 4. Attack-logik
-    // Hantera timer för animationer
-    if (player.attackTimer > 0) {
-        player.attackTimer--;
-    } else {
-        player.isKicking = false;
-        player.isPunching = false;
-    }
-
-    // Trigga nya attacker (om ingen annan pågår)
-    if (player.attackTimer === 0) {
-        if (keys.a) {
-            player.isKicking = true;
-            player.attackTimer = 10; // Visa sparken i 10 frames
-        } else if (keys.s) {
-            player.isPunching = true;
-            player.attackTimer = 10; // Visa slaget i 10 frames
-        }
-    }
-
-    // 5. Walk animation frame
-    if ((keys.left || keys.right) && player.onGround) {
-        player.walkAnimFrame += 0.2;
-    } else {
-        player.walkAnimFrame = 0;
+    const dist = Math.abs((attacker.x + attacker.width/2) - (defender.x + defender.width/2));
+    if (dist < range && Math.abs(attacker.y - defender.y) < 60) {
+        defender.health -= attacker.isKicking ? 10 : 5; // Rejälare skada men bara en gång
+        
+        const kickbackForce = attacker.isKicking ? 20 : 12;
+        defender.velX = attacker.facingRight ? kickbackForce : -kickbackForce;
+        
+        attacker.hasHit = true; // Markera att vi landat en träff
+        updateBars();
     }
 }
 
-// --- RIT-LOGIK (GRAFIK) ---
-function drawPlayer() {
-    ctx.lineWidth = player.lineWidth;
-    ctx.strokeStyle = 'black';
+function updateChar(char, target = null) {
+    if (!gameActive || char.health <= 0) return;
+
+    if (!char.isPlayer && target) {
+        const dist = char.x - target.x;
+        if (Math.abs(dist) > 70) {
+            char.velX = dist > 0 ? -2.5 : 2.5;
+            char.facingRight = dist < 0;
+        } else {
+            char.velX *= 0.8;
+            if (char.attackTimer === 0) {
+                if (Math.random() < 0.05) { 
+                    char.isPunching = true; 
+                    char.attackTimer = 15; 
+                    char.hasHit = false; 
+                }
+                else if (Math.random() < 0.02) { 
+                    char.isKicking = true; 
+                    char.attackTimer = 25; 
+                    char.hasHit = false; 
+                }
+            }
+        }
+    } else if (char.isPlayer) {
+        char.velX *= 0.8;
+        if (keys.left) { char.velX = -6; char.facingRight = false; }
+        if (keys.right) { char.velX = 6; char.facingRight = true; }
+        if (keys.up && char.onGround) { char.velY = -16; char.onGround = false; }
+        
+        if (char.attackTimer === 0) {
+            if (keys.a) { 
+                char.isKicking = true; 
+                char.attackTimer = 25; 
+                char.hasHit = false; // Reset för ny attack
+                keys.a = false; // Tvinga fram nytt tryck
+            }
+            else if (keys.s) { 
+                char.isPunching = true; 
+                char.attackTimer = 15; 
+                char.hasHit = false; // Reset för ny attack
+                keys.s = false; // Tvinga fram nytt tryck
+            }
+        }
+    }
+
+    char.velY += gravity;
+    char.x += char.velX;
+    char.y += char.velY;
+
+    if (char.y + char.height > groundY) {
+        char.y = groundY - char.height;
+        char.velY = 0;
+        char.onGround = true;
+    }
+
+    if (char.x < 0) char.x = 0;
+    if (char.x + char.width > canvas.width) char.x = canvas.width - char.width;
+
+    if (char.attackTimer > 0) {
+        char.attackTimer--;
+        if (target) checkCollision(char, target, char.isKicking ? 85 : 65);
+    } else {
+        char.isKicking = false;
+        char.isPunching = false;
+    }
+
+    if (Math.abs(char.velX) > 1) char.walkFrame += 0.2;
+}
+
+function drawStickman(char) {
+    const cx = char.x + char.width/2;
+    const headY = char.y + 20;
+    const hipY = char.y + 70;
+    const footY = char.y + char.height;
+    
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = char.health > 0 ? '#333' : '#bbb';
     ctx.lineCap = 'round';
 
-    // Beräkna mittpunkten för kroppen
-    const centerX = player.x + player.width / 2;
-    const headY = player.y + player.headRadius;
-    const bodyTopY = headY + player.headRadius;
-    const bodyBottomY = bodyTopY + player.bodyLength;
+    ctx.beginPath(); ctx.moveTo(cx, headY + 15); ctx.lineTo(cx, hipY); ctx.stroke();
 
-    // 1. Rita Kroppen (bålen)
-    ctx.beginPath();
-    ctx.moveTo(centerX, bodyTopY);
-    ctx.lineTo(centerX, bodyBottomY);
-    ctx.stroke();
-
-    // 2. Rita Benen
-    // Beräkna bendelning baserat på walk animation
-    const legSway = Math.sin(player.walkAnimFrame) * 10;
-    
-    // Vänster ben
-    ctx.beginPath();
-    ctx.moveTo(centerX, bodyBottomY);
-    if (!player.onGround) {
-        // I luften: dra ihop benen lite
-        ctx.lineTo(centerX - 5, bodyBottomY + player.limbLength);
-    } else {
-        ctx.lineTo(centerX - 10 - legSway, bodyBottomY + player.limbLength);
-    }
-    ctx.stroke();
-
-    // Höger ben
-    ctx.beginPath();
-    ctx.moveTo(centerX, bodyBottomY);
-    if (!player.onGround) {
-        ctx.lineTo(centerX + 5, bodyBottomY + player.limbLength);
-    } else {
-        ctx.lineTo(centerX + 10 + legSway, bodyBottomY + player.limbLength);
-    }
-    ctx.stroke();
-
-    // 3. Rita Armarna / Attacker
-    const armY = bodyTopY + 10; // Fäst armarna lite under nacken
-    const attackReach = player.facingRight ? 30 : -30;
-
-    if (player.isPunching) {
-        // Boxnings-animation
-        ctx.beginPath();
-        ctx.moveTo(centerX, armY);
-        // Utsträckt arm
-        ctx.lineTo(centerX + attackReach * 1.5, armY); 
-        ctx.stroke();
-        
-        // Den andra armen (vilar)
-        ctx.beginPath();
-        ctx.moveTo(centerX, armY);
-        ctx.lineTo(centerX - attackReach * 0.5, armY + 15);
-        ctx.stroke();
-
-        // Rita en "boxningshandske"
-        ctx.fillStyle = 'red';
-        ctx.beginPath();
-        ctx.arc(centerX + attackReach * 1.5, armY, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-    } else if (player.isKicking) {
-        // Spark-animation (vi ritar om ena benet)
-        // Rita vilande armar
-        ctx.beginPath();
-        ctx.moveTo(centerX, armY);
-        ctx.lineTo(centerX - 10, armY + 20);
-        ctx.moveTo(centerX, armY);
-        ctx.lineTo(centerX + 10, armY + 20);
-        ctx.stroke();
-
-        // Rita det sparkande benet
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        ctx.moveTo(centerX, bodyBottomY);
-        ctx.lineTo(centerX + attackReach * 1.5, bodyBottomY - 10);
-        ctx.stroke();
-        
-        // Rita en fot/sko
-        ctx.fillStyle = '#654321'; // Brun sko
-        ctx.fillRect(centerX + attackReach * 1.5 - 5, bodyBottomY - 15, 10, 10);
-
-    } else {
-        // Normala armar (vilar/går)
-        const armSway = player.onGround ? legSway : 0;
-        
-        // Bakre arm
-        ctx.beginPath();
-        ctx.moveTo(centerX, armY);
-        ctx.lineTo(centerX - 10 + armSway, armY + player.limbLength * 0.7);
-        ctx.stroke();
-
-        // Främre arm
-        ctx.beginPath();
-        ctx.moveTo(centerX, armY);
-        ctx.lineTo(centerX + 10 - armSway, armY + player.limbLength * 0.7);
-        ctx.stroke();
-    }
-
-    // 4. Rita Huvudet (Bilden)
-    // Vi ritar en cirkel först som backup om bilden inte laddas
-    ctx.beginPath();
-    ctx.arc(centerX, headY, player.headRadius, 0, Math.PI * 2);
-    // ctx.fillStyle = 'white'; // Ta bort kommentar för att se cirkeln bakom
-    // ctx.fill();
-    // ctx.stroke();
-
-    // Rita Masen-bilden över cirkeln
-    if (faceImage.complete) {
-        // Beräkna storlek och position för att passa cirkeln
-        const imgSize = player.headRadius * 2.5; // Gör bilden lite större än cirkeln
-        const imgX = centerX - imgSize / 2;
-        const imgY = headY - imgSize / 2;
-
-        ctx.save(); // Spara nuvarande stat (för clipping)
-        
-        // Skapa en cirkulär mask så bilden inte sticker ut
-        ctx.beginPath();
-        ctx.arc(centerX, headY, player.headRadius, 0, Math.PI * 2);
-        ctx.clip(); // Allt som ritas efter detta klipps till cirkeln
-
-        // Om gubben går åt vänster, spegelvänd bilden
-        if (!player.facingRight) {
-            ctx.scale(-1, 1);
-            // Justera X-positionen efter spegling
-            ctx.drawImage(faceImage, -(imgX + imgSize), imgY, imgSize, imgSize);
+    const legMove = Math.sin(char.walkFrame) * 15;
+    [1, -1].forEach(side => {
+        ctx.beginPath(); ctx.moveTo(cx, hipY);
+        if (char.isKicking && char.facingRight === (side === 1)) {
+            const reach = char.facingRight ? 45 : -45;
+            ctx.lineTo(cx + reach/2, hipY - 5); 
+            ctx.lineTo(cx + reach, hipY - 5);   
         } else {
-            ctx.drawImage(faceImage, imgX, imgY, imgSize, imgSize);
+            const offset = side * legMove;
+            ctx.lineTo(cx + offset, hipY + 20); 
+            ctx.lineTo(cx + offset * 1.5, footY);
         }
+        ctx.stroke();
+    });
 
-        ctx.restore(); // Återställ stat (ta bort mask och spegling)
+    const armY = headY + 25;
+    ctx.beginPath(); ctx.moveTo(cx, armY);
+    if (char.isPunching) {
+        const reach = char.facingRight ? 45 : -45;
+        ctx.lineTo(cx + reach, armY);
+    } else {
+        ctx.lineTo(cx - 15, armY + 20);
+        ctx.moveTo(cx, armY);
+        ctx.lineTo(cx + 15, armY + 20);
+    }
+    ctx.stroke();
+
+    if (char.face.complete) {
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, headY, 28, 0, Math.PI*2); ctx.clip();
+        if (!char.facingRight) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); }
+        ctx.drawImage(char.face, cx - 32, headY - 32, 64, 64);
+        ctx.restore();
     }
 }
 
-function draw() {
-    // Rensa hela canvasen
+function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#444'; ctx.fillRect(0, groundY, canvas.width, 30);
+    ctx.fillStyle = '#333'; ctx.fillRect(0, groundY, canvas.width, 4);
 
-    // Rita marken
-    ctx.fillStyle = '#888';
-    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+    if (gameActive) {
+        updateChar(player, enemy);
+        updateChar(enemy, player);
 
-    // Rita spelaren
-    drawPlayer();
+        if (player.health <= 0 || enemy.health <= 0) {
+            gameActive = false;
+            document.getElementById('gameOverOverlay').style.display = 'flex';
+            document.getElementById('winMessage').innerText = player.health <= 0 ? "SKVADERN VANN!" : "MASEN VANN!";
+            document.getElementById('winMessage').style.color = player.health <= 0 ? "red" : "#0070ba";
+        }
+    }
+
+    if(player) drawStickman(player);
+    if(enemy) drawStickman(enemy);
+
+    requestAnimationFrame(loop);
 }
 
-
-// --- HUVUDLOOP (GAME LOOP) ---
-function gameLoop() {
-    update();
-    draw();
-    // Anropa nästa frame
-    requestAnimationFrame(gameLoop);
-}
-
-// Starta spelet när bilden har laddats
-faceImage.onload = function() {
-    gameLoop();
-};
-
-// Om bilden inte laddas (t.ex. fel filnamn), starta ändå
-faceImage.onerror = function() {
-    console.error("Kunde inte ladda bilden. Kontrollera filnamnet.");
-    gameLoop();
-}
-
+loop();
 </script>
 </body>
 </html>
