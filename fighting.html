@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masen vs Skvadern 2.0 - Fixed Combat</title>
+    <title>Masen vs Skvadern - Knockout Edition</title>
     <style>
         body { margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; }
         #game-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
@@ -57,14 +57,17 @@ const ctx = canvas.getContext('2d');
 const p1Bar = document.getElementById('p1Bar');
 const p2Bar = document.getElementById('p2Bar');
 
+// Bilder
 const faceMasen = new Image(); faceMasen.src = 'masen-removebg-preview.png';
 const faceSkvader = new Image(); faceSkvader.src = 'skvader-removebg-preview.png';
+
+// Ljud
+const soundSlag = new Audio('slag.mp3');
+const soundBell = new Audio('boxingbell.mp3');
 
 let gameActive = false;
 const gravity = 0.8;
 const groundY = canvas.height - 30;
-
-// Håller koll på om tangenten är nertryckt för att förhindra spam
 const keysPressed = {};
 
 function createCharacter(x, color, face, isPlayer) {
@@ -75,10 +78,11 @@ function createCharacter(x, color, face, isPlayer) {
         onGround: false,
         facingRight: isPlayer,
         isKicking: false, isPunching: false, attackTimer: 0,
-        hasHit: false, // NYTT: Förhindrar flera träffar i samma attack
+        hasHit: false,
         color: color, face: face,
         isPlayer: isPlayer,
-        walkFrame: 0
+        walkFrame: 0,
+        knockedOut: false
     };
 }
 
@@ -90,8 +94,6 @@ window.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') keys.left = true;
     if (e.key === 'ArrowRight') keys.right = true;
     if (e.key === 'ArrowUp') keys.up = true;
-    
-    // Attacktangenter: Sätt till true bara om de inte redan hölls in
     if (key === 'a' && !keysPressed['a']) { keys.a = true; keysPressed['a'] = true; }
     if (key === 's' && !keysPressed['s']) { keys.s = true; keysPressed['s'] = true; }
 });
@@ -104,17 +106,6 @@ window.addEventListener('keyup', e => {
     if (key === 'a') { keys.a = false; keysPressed['a'] = false; }
     if (key === 's') { keys.s = false; keysPressed['s'] = false; }
 });
-
-function updateBars() {
-    p1Bar.style.width = Math.max(0, player.health) + "%";
-    p2Bar.style.width = Math.max(0, enemy.health) + "%";
-    [player, enemy].forEach((char, i) => {
-        const bar = i === 0 ? p1Bar : p2Bar;
-        if(char.health < 30) bar.style.backgroundColor = "#ff0000";
-        else if(char.health < 60) bar.style.backgroundColor = "#ffff00";
-        else bar.style.backgroundColor = "#00ff00";
-    });
-}
 
 function initGame() {
     player = createCharacter(100, '#0070ba', faceMasen, true);
@@ -130,42 +121,62 @@ function resetGame() {
 }
 
 function checkCollision(attacker, defender, range) {
-    // Om vi redan har träffat under denna attack-timer, gör inget
-    if (attacker.hasHit) return;
+    if (attacker.hasHit || defender.knockedOut) return;
 
     const dist = Math.abs((attacker.x + attacker.width/2) - (defender.x + defender.width/2));
     if (dist < range && Math.abs(attacker.y - defender.y) < 60) {
-        defender.health -= attacker.isKicking ? 10 : 5; // Rejälare skada men bara en gång
+        defender.health -= attacker.isKicking ? 15 : 8;
         
-        const kickbackForce = attacker.isKicking ? 20 : 12;
+        // Spela slag-ljud
+        soundSlag.currentTime = 0;
+        soundSlag.play();
+        
+        const kickbackForce = attacker.isKicking ? 22 : 14;
         defender.velX = attacker.facingRight ? kickbackForce : -kickbackForce;
         
-        attacker.hasHit = true; // Markera att vi landat en träff
+        attacker.hasHit = true;
         updateBars();
     }
 }
 
-function updateChar(char, target = null) {
-    if (!gameActive || char.health <= 0) return;
+function updateBars() {
+    p1Bar.style.width = Math.max(0, player.health) + "%";
+    p2Bar.style.width = Math.max(0, enemy.health) + "%";
+    [player, enemy].forEach((char, i) => {
+        const bar = i === 0 ? p1Bar : p2Bar;
+        if(char.health < 30) bar.style.backgroundColor = "#ff0000";
+        else if(char.health < 60) bar.style.backgroundColor = "#ffff00";
+        else bar.style.backgroundColor = "#00ff00";
+    });
+}
 
+function updateChar(char, target = null) {
+    if (char.knockedOut) {
+        char.velX *= 0.9; // Sakta ner glidning vid KO
+        char.x += char.velX;
+        if (char.y + char.height > groundY) {
+            char.y = groundY - char.height;
+            char.velY = 0;
+        } else {
+            char.velY += gravity;
+            char.y += char.velY;
+        }
+        return;
+    }
+
+    if (!gameActive) return;
+
+    // AI eller Player kontroller
     if (!char.isPlayer && target) {
         const dist = char.x - target.x;
-        if (Math.abs(dist) > 70) {
+        if (Math.abs(dist) > 75) {
             char.velX = dist > 0 ? -2.5 : 2.5;
             char.facingRight = dist < 0;
         } else {
             char.velX *= 0.8;
             if (char.attackTimer === 0) {
-                if (Math.random() < 0.05) { 
-                    char.isPunching = true; 
-                    char.attackTimer = 15; 
-                    char.hasHit = false; 
-                }
-                else if (Math.random() < 0.02) { 
-                    char.isKicking = true; 
-                    char.attackTimer = 25; 
-                    char.hasHit = false; 
-                }
+                if (Math.random() < 0.05) { char.isPunching = true; char.attackTimer = 15; char.hasHit = false; }
+                else if (Math.random() < 0.02) { char.isKicking = true; char.attackTimer = 25; char.hasHit = false; }
             }
         }
     } else if (char.isPlayer) {
@@ -175,18 +186,8 @@ function updateChar(char, target = null) {
         if (keys.up && char.onGround) { char.velY = -16; char.onGround = false; }
         
         if (char.attackTimer === 0) {
-            if (keys.a) { 
-                char.isKicking = true; 
-                char.attackTimer = 25; 
-                char.hasHit = false; // Reset för ny attack
-                keys.a = false; // Tvinga fram nytt tryck
-            }
-            else if (keys.s) { 
-                char.isPunching = true; 
-                char.attackTimer = 15; 
-                char.hasHit = false; // Reset för ny attack
-                keys.s = false; // Tvinga fram nytt tryck
-            }
+            if (keys.a) { char.isKicking = true; char.attackTimer = 25; char.hasHit = false; keys.a = false; }
+            else if (keys.s) { char.isPunching = true; char.attackTimer = 15; char.hasHit = false; keys.s = false; }
         }
     }
 
@@ -215,18 +216,30 @@ function updateChar(char, target = null) {
 }
 
 function drawStickman(char) {
+    ctx.save();
+    
     const cx = char.x + char.width/2;
+    const footY = char.y + char.height;
+
+    // Om KO, rotera gubben 90 grader
+    if (char.knockedOut) {
+        ctx.translate(cx, footY);
+        ctx.rotate(char.facingRight ? -Math.PI / 2 : Math.PI / 2);
+        ctx.translate(-cx, -footY);
+    }
+
     const headY = char.y + 20;
     const hipY = char.y + 70;
-    const footY = char.y + char.height;
     
     ctx.lineWidth = 5;
-    ctx.strokeStyle = char.health > 0 ? '#333' : '#bbb';
+    ctx.strokeStyle = char.health > 0 ? '#333' : '#888';
     ctx.lineCap = 'round';
 
+    // Kropp
     ctx.beginPath(); ctx.moveTo(cx, headY + 15); ctx.lineTo(cx, hipY); ctx.stroke();
 
-    const legMove = Math.sin(char.walkFrame) * 15;
+    // Ben
+    const legMove = char.knockedOut ? 0 : Math.sin(char.walkFrame) * 15;
     [1, -1].forEach(side => {
         ctx.beginPath(); ctx.moveTo(cx, hipY);
         if (char.isKicking && char.facingRight === (side === 1)) {
@@ -241,6 +254,7 @@ function drawStickman(char) {
         ctx.stroke();
     });
 
+    // Armar
     const armY = headY + 25;
     ctx.beginPath(); ctx.moveTo(cx, armY);
     if (char.isPunching) {
@@ -253,6 +267,7 @@ function drawStickman(char) {
     }
     ctx.stroke();
 
+    // Huvud
     if (char.face.complete) {
         ctx.save();
         ctx.beginPath(); ctx.arc(cx, headY, 28, 0, Math.PI*2); ctx.clip();
@@ -260,6 +275,8 @@ function drawStickman(char) {
         ctx.drawImage(char.face, cx - 32, headY - 32, 64, 64);
         ctx.restore();
     }
+    
+    ctx.restore();
 }
 
 function loop() {
@@ -267,20 +284,27 @@ function loop() {
     ctx.fillStyle = '#444'; ctx.fillRect(0, groundY, canvas.width, 30);
     ctx.fillStyle = '#333'; ctx.fillRect(0, groundY, canvas.width, 4);
 
-    if (gameActive) {
+    if (player && enemy) {
         updateChar(player, enemy);
         updateChar(enemy, player);
 
-        if (player.health <= 0 || enemy.health <= 0) {
+        if (gameActive && (player.health <= 0 || enemy.health <= 0)) {
             gameActive = false;
-            document.getElementById('gameOverOverlay').style.display = 'flex';
-            document.getElementById('winMessage').innerText = player.health <= 0 ? "SKVADERN VANN!" : "MASEN VANN!";
-            document.getElementById('winMessage').style.color = player.health <= 0 ? "red" : "#0070ba";
-        }
-    }
+            soundBell.play(); // Spela klockan
+            
+            if (player.health <= 0) player.knockedOut = true;
+            else enemy.knockedOut = true;
 
-    if(player) drawStickman(player);
-    if(enemy) drawStickman(enemy);
+            setTimeout(() => {
+                document.getElementById('gameOverOverlay').style.display = 'flex';
+                document.getElementById('winMessage').innerText = player.health <= 0 ? "SKVADERN VANN!" : "MASEN VANN!";
+                document.getElementById('winMessage').style.color = player.health <= 0 ? "red" : "#0070ba";
+            }, 1000);
+        }
+
+        drawStickman(player);
+        drawStickman(enemy);
+    }
 
     requestAnimationFrame(loop);
 }
