@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fightingspelet</title>
+    <title>Masen vs Skvadern - Arena Edition</title>
     <style>
         body { margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; }
         #game-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
@@ -141,7 +141,7 @@ const soundBell = new Audio('boxingbell.mp3');
 
 let gameActive = false;
 const gravity = 0.8;
-const groundY = canvas.height - 30;
+const groundY = canvas.height - 30; // Plattformens ovankant
 const keysPressed = {};
 let player, enemy;
 const keys = { left: false, right: false, up: false, a: false, s: false };
@@ -328,18 +328,21 @@ function drawStickman(char) {
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Rita Arenan
+    // 1. Rita Bakgrunden (Arenan)
     const currentArena = arenas[arenaIdx];
     if (currentArena.img && currentArena.img.complete) {
         ctx.drawImage(currentArena.img, 0, 0, canvas.width, canvas.height);
     } else {
         // Standard "Bunkern" stil
         ctx.fillStyle = '#eee'; ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = '#444'; ctx.fillRect(0, groundY, canvas.width, 30);
     }
     
-    // Marklinje (alltid där för att markera fötterna)
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0, groundY, canvas.width, 4);
+    // 2. Rita Plattformen (Grått golv) - Detta ritas *över* bakgrundsbilden
+    ctx.fillStyle = '#666'; // Grå färg för plattformen
+    ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY); 
+    
+    // Marklinje (mörkgrå) för lite kontrast
+    ctx.fillStyle = '#444'; ctx.fillRect(0, groundY, canvas.width, 4);
 
     if (player && enemy) {
         updateChar(player, enemy); updateChar(enemy, player);
