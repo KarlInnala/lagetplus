@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masen - Streckgubbe Spel</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Förhindrar scrollning när man hoppar */
+            font-family: sans-serif;
+        }
+
+        #gameContainer {
+            position: relative;
+        }
+
+        canvas {
+            border: 4px solid #333;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        #controlsInfo {
+            position: absolute;
+            bottom: -60px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #555;
+            font-size: 14px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 0;
+            border-radius: 0 0 10px 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div id="controlsInfo">
+        <strong>Kontroller:</strong> Piltangenter = Gå/Hoppa | <strong>A</strong> = Sparka | <strong>S</strong> = Boxas
+    </div>
+</div>
+
+<script>
+// --- KONFIGURATION & SETUP ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Ladda bilden för ansiktet
+const faceImage = new Image();
+faceImage.src = 'masen-removebg-preview.png'; // Måste ligga i samma mapp!
+
+// Spelarens egenskaper
+const player = {
+    // Position och storlek
+    x: 100,
+    y: 300, // Startposition (Y mäts från toppen)
+    width: 30, // Ungefärlig bredd för kollision
+    height: 120, // Total höjd
+
+    // Rörelse
+    speed: 5,
+    velX: 0,
+    velY: 0,
+    gravity: 0.8,
+    jumpForce: -15,
+    onGround: false,
+
+    // Grafikinställningar
+    lineWidth: 4,
+    headRadius: 25,
+    bodyLength: 50,
+    limbLength: 40,
+
+    // Tillstånd (för animationer)
+    facingRight: true,
+    isKicking: false,
+    isPunching: false,
+    attackTimer: 0, // Hur länge attacken visas
+    walkAnimFrame: 0 // För att få benen att röra sig
+};
+
+// Tangentbordsstatus
+const keys = {
+    left: false,
+    right: false,
+    up: false,
+    a: false, // Spark
+    s: false  // Boxas
+};
+
+// --- INPUT HANTERING ---
+window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') keys.left = true;
+    if (e.key === 'ArrowRight') keys.right = true;
+    if (e.key === 'ArrowUp') keys.up = true;
+    if (e.key.toLowerCase() === 'a') keys.a = true;
+    if (e.key.toLowerCase() === 's') keys.s = true;
+});
+
+window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft') keys.left = false;
+    if (e.key === 'ArrowRight') keys.right = false;
+    if (e.key === 'ArrowUp') keys.up = false;
+    // Attacker triggas bara en gång per tryck
+    if (e.key.toLowerCase() === 'a') keys.a = false;
+    if (e.key.toLowerCase() === 's') keys.s = false;
+});
+
+
+// --- SPEL-LOGIK (UPPDATERING) ---
+function update() {
+    // 1. Horisontell rörelse
+    player.velX = 0;
+    if (keys.left) {
+        player.velX = -player.speed;
+        player.facingRight = false;
+    }
+    if (keys.right) {
+        player.velX = player.speed;
+        player.facingRight = true;
+    }
+
+    // 2. Vertikal rörelse (Hopp och Gravitation)
+    player.velY += player.gravity; // Gravitation drar alltid neråt
+
+    if (keys.up && player.onGround) {
+        player.velY = player.jumpForce;
+        player.onGround = false;
+    }
+
+    // Uppdatera position
+    player.x += player.velX;
+    player.y += player.velY;
+
+    // 3. Kollisionshantering (Golv och Väggar)
+    // Enkelt golv
+    const groundY = canvas.height - 20; // Marken är 20px från botten
+    if (player.y + player.height > groundY) {
+        player.y = groundY - player.height;
+        player.velY = 0;
+        player.onGround = true;
+    }
+
+    // Håll spelaren inom canvasen (vänster/höger)
+    if (player.x < 0) player.x = 0;
+    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+    // 4. Attack-logik
+    // Hantera timer för animationer
+    if (player.attackTimer > 0) {
+        player.attackTimer--;
+    } else {
+        player.isKicking = false;
+        player.isPunching = false;
+    }
+
+    // Trigga nya attacker (om ingen annan pågår)
+    if (player.attackTimer === 0) {
+        if (keys.a) {
+            player.isKicking = true;
+            player.attackTimer = 10; // Visa sparken i 10 frames
+        } else if (keys.s) {
+            player.isPunching = true;
+            player.attackTimer = 10; // Visa slaget i 10 frames
+        }
+    }
+
+    // 5. Walk animation frame
+    if ((keys.left || keys.right) && player.onGround) {
+        player.walkAnimFrame += 0.2;
+    } else {
+        player.walkAnimFrame = 0;
+    }
+}
+
+// --- RIT-LOGIK (GRAFIK) ---
+function drawPlayer() {
+    ctx.lineWidth = player.lineWidth;
+    ctx.strokeStyle = 'black';
+    ctx.lineCap = 'round';
+
+    // Beräkna mittpunkten för kroppen
+    const centerX = player.x + player.width / 2;
+    const headY = player.y + player.headRadius;
+    const bodyTopY = headY + player.headRadius;
+    const bodyBottomY = bodyTopY + player.bodyLength;
+
+    // 1. Rita Kroppen (bålen)
+    ctx.beginPath();
+    ctx.moveTo(centerX, bodyTopY);
+    ctx.lineTo(centerX, bodyBottomY);
+    ctx.stroke();
+
+    // 2. Rita Benen
+    // Beräkna bendelning baserat på walk animation
+    const legSway = Math.sin(player.walkAnimFrame) * 10;
+    
+    // Vänster ben
+    ctx.beginPath();
+    ctx.moveTo(centerX, bodyBottomY);
+    if (!player.onGround) {
+        // I luften: dra ihop benen lite
+        ctx.lineTo(centerX - 5, bodyBottomY + player.limbLength);
+    } else {
+        ctx.lineTo(centerX - 10 - legSway, bodyBottomY + player.limbLength);
+    }
+    ctx.stroke();
+
+    // Höger ben
+    ctx.beginPath();
+    ctx.moveTo(centerX, bodyBottomY);
+    if (!player.onGround) {
+        ctx.lineTo(centerX + 5, bodyBottomY + player.limbLength);
+    } else {
+        ctx.lineTo(centerX + 10 + legSway, bodyBottomY + player.limbLength);
+    }
+    ctx.stroke();
+
+    // 3. Rita Armarna / Attacker
+    const armY = bodyTopY + 10; // Fäst armarna lite under nacken
+    const attackReach = player.facingRight ? 30 : -30;
+
+    if (player.isPunching) {
+        // Boxnings-animation
+        ctx.beginPath();
+        ctx.moveTo(centerX, armY);
+        // Utsträckt arm
+        ctx.lineTo(centerX + attackReach * 1.5, armY); 
+        ctx.stroke();
+        
+        // Den andra armen (vilar)
+        ctx.beginPath();
+        ctx.moveTo(centerX, armY);
+        ctx.lineTo(centerX - attackReach * 0.5, armY + 15);
+        ctx.stroke();
+
+        // Rita en "boxningshandske"
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(centerX + attackReach * 1.5, armY, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (player.isKicking) {
+        // Spark-animation (vi ritar om ena benet)
+        // Rita vilande armar
+        ctx.beginPath();
+        ctx.moveTo(centerX, armY);
+        ctx.lineTo(centerX - 10, armY + 20);
+        ctx.moveTo(centerX, armY);
+        ctx.lineTo(centerX + 10, armY + 20);
+        ctx.stroke();
+
+        // Rita det sparkande benet
+        ctx.strokeStyle = 'black';
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.moveTo(centerX, bodyBottomY);
+        ctx.lineTo(centerX + attackReach * 1.5, bodyBottomY - 10);
+        ctx.stroke();
+        
+        // Rita en fot/sko
+        ctx.fillStyle = '#654321'; // Brun sko
+        ctx.fillRect(centerX + attackReach * 1.5 - 5, bodyBottomY - 15, 10, 10);
+
+    } else {
+        // Normala armar (vilar/går)
+        const armSway = player.onGround ? legSway : 0;
+        
+        // Bakre arm
+        ctx.beginPath();
+        ctx.moveTo(centerX, armY);
+        ctx.lineTo(centerX - 10 + armSway, armY + player.limbLength * 0.7);
+        ctx.stroke();
+
+        // Främre arm
+        ctx.beginPath();
+        ctx.moveTo(centerX, armY);
+        ctx.lineTo(centerX + 10 - armSway, armY + player.limbLength * 0.7);
+        ctx.stroke();
+    }
+
+    // 4. Rita Huvudet (Bilden)
+    // Vi ritar en cirkel först som backup om bilden inte laddas
+    ctx.beginPath();
+    ctx.arc(centerX, headY, player.headRadius, 0, Math.PI * 2);
+    // ctx.fillStyle = 'white'; // Ta bort kommentar för att se cirkeln bakom
+    // ctx.fill();
+    // ctx.stroke();
+
+    // Rita Masen-bilden över cirkeln
+    if (faceImage.complete) {
+        // Beräkna storlek och position för att passa cirkeln
+        const imgSize = player.headRadius * 2.5; // Gör bilden lite större än cirkeln
+        const imgX = centerX - imgSize / 2;
+        const imgY = headY - imgSize / 2;
+
+        ctx.save(); // Spara nuvarande stat (för clipping)
+        
+        // Skapa en cirkulär mask så bilden inte sticker ut
+        ctx.beginPath();
+        ctx.arc(centerX, headY, player.headRadius, 0, Math.PI * 2);
+        ctx.clip(); // Allt som ritas efter detta klipps till cirkeln
+
+        // Om gubben går åt vänster, spegelvänd bilden
+        if (!player.facingRight) {
+            ctx.scale(-1, 1);
+            // Justera X-positionen efter spegling
+            ctx.drawImage(faceImage, -(imgX + imgSize), imgY, imgSize, imgSize);
+        } else {
+            ctx.drawImage(faceImage, imgX, imgY, imgSize, imgSize);
+        }
+
+        ctx.restore(); // Återställ stat (ta bort mask och spegling)
+    }
+}
+
+function draw() {
+    // Rensa hela canvasen
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Rita marken
+    ctx.fillStyle = '#888';
+    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+
+    // Rita spelaren
+    drawPlayer();
+}
+
+
+// --- HUVUDLOOP (GAME LOOP) ---
+function gameLoop() {
+    update();
+    draw();
+    // Anropa nästa frame
+    requestAnimationFrame(gameLoop);
+}
+
+// Starta spelet när bilden har laddats
+faceImage.onload = function() {
+    gameLoop();
+};
+
+// Om bilden inte laddas (t.ex. fel filnamn), starta ändå
+faceImage.onerror = function() {
+    console.error("Kunde inte ladda bilden. Kontrollera filnamnet.");
+    gameLoop();
+}
+
+</script>
+</body>
+</html>
