@@ -61,10 +61,10 @@
     <canvas id="gameCanvas" width="800" height="400"></canvas>
 
     <div id="startOverlay" class="overlay">
-        <h1 style="margin-bottom: 20px; letter-spacing: 2px;">VÄLJ DIN KARAKTÄR</h1>
+        <h1 style="margin-bottom: 20px; letter-spacing: 2px;">KARAKTÄRSVAL</h1>
         <div class="selection-area">
             <div class="selection-box p1">
-                <h4 style="margin:0">SPELARE 1</h4>
+                <h4 style="margin:0">DU</h4>
                 <div class="preview-img"><img id="p1Preview" src="" alt=""></div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <button class="nav-btn" onclick="changeChar('p1', -1)">&lt;</button>
@@ -75,7 +75,7 @@
             </div>
 
             <div class="selection-box p2">
-                <h4 style="margin:0">MOTSTÅNDARE</h4>
+                <h4 style="margin:0">DATOR</h4>
                 <div class="preview-img"><img id="p2Preview" src="" alt=""></div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <button class="nav-btn" onclick="changeChar('p2', -1)">&lt;</button>
@@ -261,27 +261,26 @@ function updateChar(char, target = null) {
     }
     if (!gameActive) return;
 
-    // Gemensam hastighetslogik baserad på Snabbhet-stats
-    const moveSpeed = 3.5 + (char.snabbhet * 0.9);
+    // Basvärden baserat på Snabbhet-stats
+    const moveSpeed = 3.5 + (char.snabbhet * 1.1); // Ökad skalning
     const jumpPower = 12 + (char.snabbhet * 0.8);
 
     if (!char.isPlayer && target) {
-        // --- AI LOGIK BASERAD PÅ STATS ---
+        // --- AI LOGIK FIXAD ---
         const dist = char.x - target.x;
         
-        // Jaktlogik (Snabbhet påverkar hur fort AI:n stänger gapet)
-        if (Math.abs(dist) > 75) { 
-            char.velX = dist > 0 ? -moveSpeed/1.8 : moveSpeed/1.8; 
+        // Jaga med full fart om man är utanför slaglängd (60px)
+        if (Math.abs(dist) > 60) { 
+            char.velX = dist > 0 ? -moveSpeed : moveSpeed; 
             char.facingRight = dist < 0; 
         } else {
-            char.velX *= 0.8;
+            // Bromsa in snabbt när man är nära
+            char.velX *= 0.5;
             if (char.attackTimer === 0) {
-                // Smidighet påverkar hur ofta AI:n vågar slå (attackChance)
-                const attackChance = 0.02 + (char.smidighet * 0.012);
+                const attackChance = 0.03 + (char.smidighet * 0.015);
                 if (Math.random() < attackChance) { 
-                    if(Math.random() > 0.7) char.isKicking = true; else char.isPunching = true;
-                    // Smidighet påverkar hur snabbt AI:n återhämtar sig efter slaget
-                    char.attackTimer = Math.max(8, 28 - char.smidighet*4); 
+                    if(Math.random() > 0.8) char.isKicking = true; else char.isPunching = true;
+                    char.attackTimer = Math.max(8, 25 - char.smidighet*4); 
                     char.hasHit = false; 
                 }
             }
@@ -310,17 +309,22 @@ function updateChar(char, target = null) {
     char.velY += gravity;
     char.x += char.velX;
     char.y += char.velY;
+    
+    // Gränser
     if (char.y + char.height > groundY) { char.y = groundY - char.height; char.velY = 0; char.onGround = true; }
     if (char.x < 0) char.x = 0;
     if (char.x + char.width > canvas.width) char.x = canvas.width - char.width;
 
+    // Attack-timers
     if (char.attackTimer > 0) {
         char.attackTimer--;
         if (target) checkCollision(char, target, char.isKicking ? 85 : 65);
     } else {
         char.isKicking = false; char.isPunching = false;
     }
-    if (Math.abs(char.velX) > 1) char.walkFrame += 0.22;
+    
+    // Animation
+    if (Math.abs(char.velX) > 0.5) char.walkFrame += 0.25;
 }
 
 function drawStickman(char) {
@@ -387,7 +391,8 @@ function loop() {
             else enemy.knockedOut = true;
             setTimeout(() => {
                 document.getElementById('gameOverOverlay').style.display = 'flex';
-                document.getElementById('winMessage').innerText = player.health <= 0 ? `${enemy.name.toUpperCase()} VANN!` : `${player.name.toUpperCase()} VANN!`;
+                const winner = player.health <= 0 ? enemy.name : player.name;
+                document.getElementById('winMessage').innerText = `${winner.toUpperCase()} VANN!`;
                 document.getElementById('winMessage').style.color = player.health <= 0 ? "red" : "#0070ba";
             }, 1000);
         }
