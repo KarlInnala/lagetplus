@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masen vs Skvadern - Hägglunds Edition</title>
+    <title>Masen vs Skvadern - Pro Edition</title>
     <style>
         body { margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; }
         #game-container { position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
@@ -20,14 +20,16 @@
         
         /* Karaktärsväljare */
         .selection-area { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .selection-box { background: #333; padding: 15px; border: 3px solid #555; border-radius: 15px; text-align: center; width: 180px; }
+        .selection-box { background: #333; padding: 15px; border: 3px solid #555; border-radius: 15px; text-align: center; width: 200px; }
         .selection-box.p1 { border-color: #0070ba; }
         .selection-box.p2 { border-color: #ff4444; }
         .preview-img { width: 80px; height: 80px; background: #444; border-radius: 50%; margin: 10px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #555; }
         .preview-img img { width: 80%; height: auto; }
         
-        /* Arena väljare */
-        .arena-box { background: #222; padding: 15px; border: 2px dashed #777; border-radius: 10px; width: 400px; text-align: center; margin-bottom: 20px; }
+        /* Arena & Garderob */
+        .sub-selection { background: #222; padding: 10px; border: 1px solid #444; border-radius: 8px; margin-top: 10px; }
+        .kit-btn { background: #444; border: 1px solid #666; color: white; padding: 4px 10px; cursor: pointer; border-radius: 4px; font-size: 11px; margin-top: 5px; width: 100%; }
+        .kit-btn:hover { background: #555; }
 
         .stats-container { text-align: left; margin-top: 10px; font-size: 11px; color: #bbb; }
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
@@ -37,10 +39,8 @@
         .nav-btn { background: #555; border: none; color: white; padding: 5px 12px; cursor: pointer; border-radius: 5px; font-weight: bold; }
         .nav-btn:hover { background: #777; }
 
-        .btn-group { display: flex; gap: 20px; }
         button.action-btn { padding: 12px 40px; font-size: 18px; font-weight: bold; color: white; background: #0070ba; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
         button.action-btn:hover { background: #008cff; transform: scale(1.05); }
-        button.secondary-btn { background: #555; }
 
         #gameOverOverlay { display: none; }
         .controls-hint { color: #888; margin-top: 15px; font-size: 14px; text-align: center;}
@@ -63,50 +63,56 @@
     <canvas id="gameCanvas" width="800" height="400"></canvas>
 
     <div id="startOverlay" class="overlay">
-        <h2 style="margin-bottom: 20px; letter-spacing: 2px;">VÄLJ DINA INSTÄLLNINGAR</h2>
+        <h2 style="margin-bottom: 20px; letter-spacing: 2px;">VÄLJ KARAKTÄR & GARDEROB</h2>
         
         <div class="selection-area">
             <div class="selection-box p1">
-                <h4 style="margin:0">DIN FIGHTER</h4>
                 <div class="preview-img"><img id="p1Preview" src="" alt=""></div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <button class="nav-btn" onclick="changeChar('p1', -1)">&lt;</button>
                     <b id="p1CharName" style="font-size: 13px;">NAMN</b>
                     <button class="nav-btn" onclick="changeChar('p1', 1)">&gt;</button>
                 </div>
+                <div class="sub-selection">
+                    <div style="font-size: 10px;">STÄLL</div>
+                    <button id="p1KitBtn" class="kit-btn" onclick="toggleKit('p1')">HEMMA</button>
+                </div>
                 <div id="p1Stats" class="stats-container"></div>
             </div>
 
             <div class="selection-box p2">
-                <h4 style="margin:0">MOTSTÅNDARE</h4>
                 <div class="preview-img"><img id="p2Preview" src="" alt=""></div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <button class="nav-btn" onclick="changeChar('p2', -1)">&lt;</button>
                     <b id="p2CharName" style="font-size: 13px;">NAMN</b>
                     <button class="nav-btn" onclick="changeChar('p2', 1)">&gt;</button>
                 </div>
+                <div class="sub-selection">
+                    <div style="font-size: 10px;">STÄLL</div>
+                    <button id="p2KitBtn" class="kit-btn" onclick="toggleKit('p2')">HEMMA</button>
+                </div>
                 <div id="p2Stats" class="stats-container"></div>
             </div>
         </div>
 
-        <div class="arena-box">
-            <h4 style="margin-top:0">ARENA</h4>
+        <div class="arena-box" style="background:#222; padding:15px; border-radius:10px; width:430px; text-align:center; margin-bottom:20px;">
+            <h4 style="margin:0 0 10px 0">ARENA</h4>
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <button class="nav-btn" onclick="changeArena(-1)">&lt;</button>
-                <b id="arenaName" style="font-size: 18px; color: #ffd700;">BUNKERN</b>
+                <b id="arenaName" style="font-size: 16px; color: #ffd700;">BUNKERN</b>
                 <button class="nav-btn" onclick="changeArena(1)">&gt;</button>
             </div>
         </div>
 
-        <button class="action-btn" onclick="initGame()">STARTA MATCH</button>
+        <button class="action-btn" onclick="initGame()">FIGHT!</button>
         <div class="controls-hint">Piltangenter: Gå/Hoppa | A: Sparka | S: Boxas</div>
     </div>
 
     <div id="gameOverOverlay" class="overlay">
         <h1 id="winMessage" style="font-size: 40px; margin-bottom: 30px;"></h1>
-        <div class="btn-group">
+        <div style="display:flex; gap:20px;">
             <button class="action-btn" onclick="initGame()">REVANSCH</button>
-            <button class="action-btn secondary-btn" onclick="backToMenu()">MENY</button>
+            <button class="action-btn" style="background:#555;" onclick="backToMenu()">MENY</button>
         </div>
     </div>
 </div>
@@ -116,9 +122,27 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const fighters = [
-    { name: "Masen", file: "masen-removebg-preview.png", styrka: 5, snabbhet: 2, smidighet: 3 },
-    { name: "Skvadern", file: "skvader-removebg-preview.png", styrka: 2, snabbhet: 5, smidighet: 3 },
-    { name: "Rune", file: "rune.png.webp", styrka: 3, snabbhet: 3, smidighet: 4 }
+    { 
+        name: "Masen", file: "masen-removebg-preview.png", styrka: 5, snabbhet: 2, smidighet: 3,
+        kits: { 
+            home: { shirt: "#0070ba", pants: "#222" }, 
+            away: { shirt: "#fff", pants: "#0070ba" } 
+        }
+    },
+    { 
+        name: "Skvadern", file: "skvader-removebg-preview.png", styrka: 2, snabbhet: 5, smidighet: 3,
+        kits: { 
+            home: { shirt: "#ff4444", pants: "#333" }, 
+            away: { shirt: "#ffd700", pants: "#ff4444" } 
+        }
+    },
+    { 
+        name: "Rune", file: "rune.png.webp", styrka: 3, snabbhet: 3, smidighet: 4,
+        kits: { 
+            home: { shirt: "#2e7d32", pants: "#3e2723" }, 
+            away: { shirt: "#f5f5dc", pants: "#2e7d32" } 
+        }
+    }
 ];
 
 const arenas = [
@@ -128,13 +152,10 @@ const arenas = [
     { name: "Hägglunds Arena", file: "hagglunds.jpg" }
 ];
 
-let p1Idx = 0;
-let p2Idx = 1;
-let arenaIdx = 0;
+let p1Idx = 0, p2Idx = 1, arenaIdx = 0;
+let p1Kit = 'home', p2Kit = 'home';
 
-// Preload fighter bilder
 fighters.forEach(f => { f.img = new Image(); f.img.src = f.file; });
-// Preload arena bilder
 arenas.forEach(a => { if(a.file) { a.img = new Image(); a.img.src = a.file; } });
 
 const soundSlag = new Audio('slag.mp3');
@@ -147,6 +168,12 @@ const keysPressed = {};
 let player, enemy;
 const keys = { left: false, right: false, up: false, a: false, s: false };
 
+function toggleKit(p) {
+    if(p === 'p1') p1Kit = p1Kit === 'home' ? 'away' : 'home';
+    else p2Kit = p2Kit === 'home' ? 'away' : 'home';
+    updateMenu();
+}
+
 function renderStats(targetId, fighter) {
     const stats = [{ label: "Styrka", val: fighter.styrka }, { label: "Snabbhet", val: fighter.snabbhet }, { label: "Smidighet", val: fighter.smidighet }];
     let html = '';
@@ -157,10 +184,12 @@ function renderStats(targetId, fighter) {
 function updateMenu() {
     document.getElementById('p1Preview').src = fighters[p1Idx].file;
     document.getElementById('p1CharName').innerText = fighters[p1Idx].name;
+    document.getElementById('p1KitBtn').innerText = p1Kit.toUpperCase();
     renderStats('p1Stats', fighters[p1Idx]);
 
     document.getElementById('p2Preview').src = fighters[p2Idx].file;
     document.getElementById('p2CharName').innerText = fighters[p2Idx].name;
+    document.getElementById('p2KitBtn').innerText = p2Kit.toUpperCase();
     renderStats('p2Stats', fighters[p2Idx]);
 
     document.getElementById('arenaName').innerText = arenas[arenaIdx].name.toUpperCase();
@@ -177,6 +206,7 @@ function changeArena(dir) {
     updateMenu();
 }
 
+// Input handling, initGame, backToMenu, checkCollision, updateBars (samma som förut)
 window.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
     if (e.key === 'ArrowLeft') keys.left = true;
@@ -185,7 +215,6 @@ window.addEventListener('keydown', e => {
     if (key === 'a' && !keysPressed['a']) { keys.a = true; keysPressed['a'] = true; }
     if (key === 's' && !keysPressed['s']) { keys.s = true; keysPressed['s'] = true; }
 });
-
 window.addEventListener('keyup', e => {
     const key = e.key.toLowerCase();
     if (e.key === 'ArrowLeft') keys.left = false;
@@ -195,21 +224,9 @@ window.addEventListener('keyup', e => {
     if (key === 's') { keys.s = false; keysPressed['s'] = false; }
 });
 
-function createCharacter(x, fighterData, isPlayer) {
-    return {
-        x: x, y: 0, velX: 0, velY: 0,
-        width: 40, height: 110, health: 100,
-        onGround: false, facingRight: isPlayer,
-        isKicking: false, isPunching: false, attackTimer: 0,
-        hasHit: false, name: fighterData.name, face: fighterData.img, 
-        isPlayer: isPlayer, walkFrame: 0, knockedOut: false,
-        styrka: fighterData.styrka, snabbhet: fighterData.snabbhet, smidighet: fighterData.smidighet
-    };
-}
-
 function initGame() {
-    player = createCharacter(100, fighters[p1Idx], true);
-    enemy = createCharacter(600, fighters[p2Idx], false);
+    player = createCharacter(150, fighters[p1Idx], p1Kit, true);
+    enemy = createCharacter(600, fighters[p2Idx], p2Kit, false);
     document.getElementById('p1Name').innerText = player.name;
     document.getElementById('p2Name').innerText = enemy.name;
     updateBars();
@@ -217,6 +234,15 @@ function initGame() {
     document.getElementById('startOverlay').style.display = 'none';
     document.getElementById('gameOverOverlay').style.display = 'none';
     document.getElementById('ui').style.display = 'flex';
+}
+
+function createCharacter(x, data, kitType, isPlayer) {
+    return {
+        x: x, y: 0, velX: 0, velY: 0, width: 40, height: 110, health: 100, onGround: false, facingRight: isPlayer,
+        isKicking: false, isPunching: false, attackTimer: 0, hasHit: false, name: data.name, face: data.img,
+        isPlayer: isPlayer, walkFrame: 0, knockedOut: false, styrka: data.styrka, snabbhet: data.snabbhet, smidighet: data.smidighet,
+        kit: data.kits[kitType]
+    };
 }
 
 function backToMenu() {
@@ -230,13 +256,11 @@ function checkCollision(attacker, defender, range) {
     if (attacker.hasHit || defender.knockedOut) return;
     const dist = Math.abs((attacker.x + attacker.width/2) - (defender.x + defender.width/2));
     if (dist < range && Math.abs(attacker.y - defender.y) < 60) {
-        const damageBase = attacker.isKicking ? 3.5 : 2;
-        defender.health -= damageBase * attacker.styrka;
+        defender.health -= (attacker.isKicking ? 3.5 : 2) * attacker.styrka;
         soundSlag.currentTime = 0; soundSlag.play();
-        const kickbackForce = attacker.isKicking ? 15 + attacker.styrka : 10 + attacker.styrka;
-        defender.velX = attacker.facingRight ? kickbackForce : -kickbackForce;
-        attacker.hasHit = true;
-        updateBars();
+        const kForce = attacker.isKicking ? 15 + attacker.styrka : 10 + attacker.styrka;
+        defender.velX = attacker.facingRight ? kForce : -kForce;
+        attacker.hasHit = true; updateBars();
     }
 }
 
@@ -244,12 +268,6 @@ function updateBars() {
     if (!player || !enemy) return;
     document.getElementById('p1Bar').style.width = Math.max(0, player.health) + "%";
     document.getElementById('p2Bar').style.width = Math.max(0, enemy.health) + "%";
-    [player, enemy].forEach((char, i) => {
-        const bar = document.getElementById(i === 0 ? 'p1Bar' : 'p2Bar');
-        if(char.health < 30) bar.style.backgroundColor = "#ff0000";
-        else if(char.health < 60) bar.style.backgroundColor = "#ffff00";
-        else bar.style.backgroundColor = "#00ff00";
-    });
 }
 
 function updateChar(char, target = null) {
@@ -260,16 +278,15 @@ function updateChar(char, target = null) {
         return;
     }
     if (!gameActive) return;
-    const moveSpeed = 3.5 + (char.snabbhet * 1.1);
-    const jumpPower = 12 + (char.snabbhet * 0.8);
+    const mSpd = 3.5 + (char.snabbhet * 1.1);
+    const jPwr = 12 + (char.snabbhet * 0.8);
     if (!char.isPlayer && target) {
-        const dist = char.x - target.x;
-        if (Math.abs(dist) > 60) { char.velX = dist > 0 ? -moveSpeed : moveSpeed; char.facingRight = dist < 0; }
+        const d = char.x - target.x;
+        if (Math.abs(d) > 60) { char.velX = d > 0 ? -mSpd : mSpd; char.facingRight = d < 0; }
         else {
             char.velX *= 0.5;
             if (char.attackTimer === 0) {
-                const attackChance = 0.03 + (char.smidighet * 0.015);
-                if (Math.random() < attackChance) { 
+                if (Math.random() < 0.03 + (char.smidighet * 0.015)) { 
                     if(Math.random() > 0.8) char.isKicking = true; else char.isPunching = true;
                     char.attackTimer = Math.max(8, 25 - char.smidighet*4); char.hasHit = false; 
                 }
@@ -277,9 +294,9 @@ function updateChar(char, target = null) {
         }
     } else if (char.isPlayer) {
         char.velX *= 0.8;
-        if (keys.left) { char.velX = -moveSpeed; char.facingRight = false; }
-        if (keys.right) { char.velX = moveSpeed; char.facingRight = true; }
-        if (keys.up && char.onGround) { char.velY = -jumpPower; char.onGround = false; }
+        if (keys.left) { char.velX = -mSpd; char.facingRight = false; }
+        if (keys.right) { char.velX = mSpd; char.facingRight = true; }
+        if (keys.up && char.onGround) { char.velY = -jPwr; char.onGround = false; }
         if (char.attackTimer === 0) {
             if (keys.a) { char.isKicking = true; char.attackTimer = Math.max(12, 38 - char.smidighet*5); char.hasHit = false; keys.a = false; }
             else if (keys.s) { char.isPunching = true; char.attackTimer = Math.max(6, 26 - char.smidighet*4); char.hasHit = false; keys.s = false; }
@@ -300,48 +317,61 @@ function drawStickman(char) {
     if (char.knockedOut) {
         ctx.translate(cx, footY); ctx.rotate(char.facingRight ? -Math.PI / 2 : Math.PI / 2); ctx.translate(-cx, -footY);
     }
-    const headY = char.y + 20; const hipY = char.y + 70;
-    ctx.lineWidth = 5; ctx.strokeStyle = char.health > 0 ? '#333' : '#888'; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(cx, headY + 15); ctx.lineTo(cx, hipY); ctx.stroke();
-    const legMove = char.knockedOut ? 0 : Math.sin(char.walkFrame) * 15;
-    [1, -1].forEach(side => {
+    const headY = char.y + 20, hipY = char.y + 70;
+
+    // 1. Outline (För extra tydlighet)
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 16;
+    ctx.beginPath(); ctx.moveTo(cx, headY + 10); ctx.lineTo(cx, hipY); ctx.stroke(); // Kropp outline
+
+    // 2. Ben (Byxor)
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = char.knockedOut ? "#555" : char.kit.pants;
+    const lM = char.knockedOut ? 0 : Math.sin(char.walkFrame) * 15;
+    [1, -1].forEach(s => {
         ctx.beginPath(); ctx.moveTo(cx, hipY);
-        if (char.isKicking && char.facingRight === (side === 1)) {
-            const reach = char.facingRight ? 45 : -45; ctx.lineTo(cx + reach/2, hipY - 5); ctx.lineTo(cx + reach, hipY - 5);   
+        if (char.isKicking && char.facingRight === (s === 1)) {
+            const r = char.facingRight ? 45 : -45; ctx.lineTo(cx + r/2, hipY - 5); ctx.lineTo(cx + r, hipY - 5);   
         } else {
-            const offset = side * legMove; ctx.lineTo(cx + offset, hipY + 20); ctx.lineTo(cx + offset * 1.5, footY);
+            const o = s * lM; ctx.lineTo(cx + o, hipY + 20); ctx.lineTo(cx + o * 1.5, footY);
         }
         ctx.stroke();
     });
-    const armY = headY + 25;
-    ctx.beginPath(); ctx.moveTo(cx, armY);
-    if (char.isPunching) { const reach = char.facingRight ? 45 : -45; ctx.lineTo(cx + reach, armY); }
-    else { ctx.lineTo(cx - 15, armY + 20); ctx.moveTo(cx, armY); ctx.lineTo(cx + 15, armY + 20); }
+
+    // 3. Bålen (Tröja)
+    ctx.lineWidth = 22; // Riktigt fyllig kropp
+    ctx.strokeStyle = char.kit.shirt;
+    ctx.beginPath(); ctx.moveTo(cx, headY + 10); ctx.lineTo(cx, hipY); ctx.stroke();
+
+    // 4. Armar
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = char.kit.shirt;
+    const aY = headY + 25;
+    ctx.beginPath(); ctx.moveTo(cx, aY);
+    if (char.isPunching) { const r = char.facingRight ? 45 : -45; ctx.lineTo(cx + r, aY); }
+    else { ctx.lineTo(cx - 15, aY + 20); ctx.moveTo(cx, aY); ctx.lineTo(cx + 15, aY + 20); }
     ctx.stroke();
+
+    // 5. Huvudet
     if (char.face.complete) {
         ctx.save();
-        ctx.beginPath(); ctx.arc(cx, headY, 28, 0, Math.PI*2); ctx.clip();
+        ctx.beginPath(); ctx.arc(cx, headY, 32, 0, Math.PI*2); ctx.clip();
         if (!char.facingRight) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); }
-        ctx.drawImage(char.face, cx - 32, headY - 32, 64, 64); ctx.restore();
+        ctx.drawImage(char.face, cx - 35, headY - 35, 70, 70);
+        ctx.restore();
     }
     ctx.restore();
 }
 
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cA = arenas[arenaIdx];
+    if (cA.img && cA.img.complete) ctx.drawImage(cA.img, 0, 0, canvas.width, canvas.height);
+    else { ctx.fillStyle = '#333'; ctx.fillRect(0,0, canvas.width, canvas.height); }
     
-    // 1. Rita Bakgrunden (Arenan)
-    const currentArena = arenas[arenaIdx];
-    if (currentArena.img && currentArena.img.complete) {
-        ctx.drawImage(currentArena.img, 0, 0, canvas.width, canvas.height);
-    } else {
-        ctx.fillStyle = '#eee'; ctx.fillRect(0,0, canvas.width, canvas.height);
-    }
-    
-    // 2. Rita Plattformen (Grått golv)
-    ctx.fillStyle = '#666'; 
-    ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY); 
-    ctx.fillStyle = '#444'; ctx.fillRect(0, groundY, canvas.width, 4);
+    ctx.fillStyle = '#555'; ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY); 
+    ctx.fillStyle = '#333'; ctx.fillRect(0, groundY, canvas.width, 4);
 
     if (player && enemy) {
         updateChar(player, enemy); updateChar(enemy, player);
@@ -350,8 +380,8 @@ function loop() {
             if (player.health <= 0) player.knockedOut = true; else enemy.knockedOut = true;
             setTimeout(() => {
                 document.getElementById('gameOverOverlay').style.display = 'flex';
-                const winner = player.health <= 0 ? enemy.name : player.name;
-                document.getElementById('winMessage').innerText = `${winner.toUpperCase()} VANN!`;
+                const win = player.health <= 0 ? enemy.name : player.name;
+                document.getElementById('winMessage').innerText = `${win.toUpperCase()} VANN!`;
                 document.getElementById('winMessage').style.color = player.health <= 0 ? "red" : "#0070ba";
             }, 1000);
         }
