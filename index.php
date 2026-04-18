@@ -1,3 +1,7 @@
+<?php>
+    echo "hallå hallå":
+?>
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
